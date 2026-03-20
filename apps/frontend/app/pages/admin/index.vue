@@ -1,0 +1,17 @@
+<script setup lang="ts">
+definePageMeta({
+  layout: 'admin',
+  middleware: 'auth',
+})
+</script>
+
+<template>
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      Tableau de bord
+    </h1>
+    <p class="text-gray-600 dark:text-gray-400">
+      Bienvenue sur la plateforme PCQVP.
+    </p>
+  </div>
+</template>
