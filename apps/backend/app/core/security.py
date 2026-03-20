@@ -84,9 +84,9 @@ async def get_current_user(
     return user
 
 
-def require_role(role: str):
+def require_role(*roles: str):
     async def role_checker(current_user=Depends(get_current_user)):
-        if current_user.role.value != role:
+        if current_user.role.value not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Acces reserve aux administrateurs",
