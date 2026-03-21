@@ -25,6 +25,7 @@ const comptesNavItems = [
 ]
 
 const toolsNavItems = [
+  { label: 'Utilisateurs', to: '/admin/users' },
   { label: 'Newsletter', to: '/admin/newsletter' },
   { label: 'Analytics', to: '/admin/analytics' },
   { label: 'Configuration', to: '/admin/config' },

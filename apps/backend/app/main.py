@@ -22,6 +22,7 @@ from app.routers.newsletter import router as newsletter_router
 from app.routers.public_comptes import router as public_comptes_router
 from app.routers.public_config import router as public_config_router
 from app.routers.search import router as search_router
+from app.routers.users import router as users_router
 
 settings = get_settings()
 
@@ -53,6 +54,7 @@ app.include_router(admin_newsletter_router)
 app.include_router(admin_analytics_router)
 app.include_router(admin_config_router)
 app.include_router(public_config_router)
+app.include_router(users_router)
 
 
 @app.get("/health")

@@ -467,22 +467,28 @@ def _gv(sums: dict, computed: dict, key: str):
 
 def _apply_formatting(ws, thin_border, num_width):
     """Apply borders and column widths to a worksheet."""
+    from openpyxl.cell import MergedCell
+    from openpyxl.utils import get_column_letter
+
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row,
                             max_col=ws.max_column):
         for cell in row:
+            if isinstance(cell, MergedCell):
+                continue
             if cell.row >= 3 and cell.value is not None:
                 cell.border = thin_border
 
-    for col_cells in ws.columns:
-        col_letter = col_cells[0].column_letter
-        col_idx = col_cells[0].column
+    for col_idx in range(1, ws.max_column + 1):
+        col_letter = get_column_letter(col_idx)
         if col_idx == 1:
             ws.column_dimensions[col_letter].width = 12
         elif col_idx == 2:
             max_len = 0
-            for cell in col_cells:
-                val = str(cell.value or "")
-                max_len = max(max_len, len(val))
+            for row in ws.iter_rows(min_col=col_idx, max_col=col_idx):
+                for cell in row:
+                    if not isinstance(cell, MergedCell):
+                        val = str(cell.value or "")
+                        max_len = max(max_len, len(val))
             ws.column_dimensions[col_letter].width = min(max_len + 2, 50)
         else:
             ws.column_dimensions[col_letter].width = num_width

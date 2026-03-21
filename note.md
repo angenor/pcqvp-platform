@@ -1,0 +1,1 @@
+- pas besoins d'envoyer un email de confirmation quand on s'inscrit à une newletter(à reflechire)
