@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import UserRole
 from tests.conftest import create_test_user, get_auth_headers
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
