@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.core.database import engine
+from app.routers.admin_comptes import router as admin_comptes_router
 from app.routers.admin_geography import router as admin_geography_router
 from app.routers.admin_templates import router as admin_templates_router
 from app.routers.auth import router as auth_router
@@ -29,6 +30,7 @@ app.include_router(auth_router)
 app.include_router(geography_router)
 app.include_router(admin_geography_router)
 app.include_router(admin_templates_router)
+app.include_router(admin_comptes_router)
 
 
 @app.get("/health")
