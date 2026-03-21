@@ -3,8 +3,10 @@ import type { ProvinceListItem, RegionListItem, CommuneListItem } from '~/types/
 
 const props = withDefaults(defineProps<{
   years?: number[]
+  onSubmit?: (selection: { type: string; id: string; year?: string }) => void
 }>(), {
   years: () => [],
+  onSubmit: undefined,
 })
 
 const { fetchProvinces, fetchRegions, fetchCommunes } = useGeography()
@@ -50,12 +52,29 @@ watch(selectedRegionId, async (id) => {
   }
 })
 
+const showYears = computed(() => props.years.length > 0)
+
 const canSubmit = computed(() => {
-  return !!selectedProvinceId.value && !!selectedRegionId.value && !!selectedYear.value
+  if (!selectedProvinceId.value || !selectedRegionId.value) return false
+  if (showYears.value && !selectedYear.value) return false
+  return true
 })
 
 function handleSubmit() {
   if (!canSubmit.value) return
+
+  const type = selectedCommuneId.value ? 'commune' : 'region'
+  const id = selectedCommuneId.value || selectedRegionId.value
+
+  if (props.onSubmit) {
+    props.onSubmit({
+      type,
+      id,
+      year: selectedYear.value || undefined,
+    })
+    return
+  }
+
   if (selectedCommuneId.value) {
     navigateTo(`/communes/${selectedCommuneId.value}/annee/${selectedYear.value}`)
   } else {
@@ -157,8 +176,8 @@ function handleSubmit() {
           </select>
         </div>
 
-        <!-- Annee (mandatory) -->
-        <div>
+        <!-- Annee (mandatory, shown only when years prop is provided) -->
+        <div v-if="showYears">
           <label for="geo-annee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Annee <span class="text-red-500">*</span>
           </label>

@@ -97,6 +97,8 @@ Use multiple sub-agents in parallel for efficiency (10 max):
 - PostgreSQL 16+ via asyncpg, 3 nouvelles tables (006-account-templates)
 - Python 3.12+ (backend), TypeScript strict (frontend) + FastAPI 0.135+, SQLAlchemy 2.0.48+ async, Pydantic v2, asyncpg, openpyxl (backend) ; Nuxt 4.4+, Tailwind CSS 4, @nuxtjs/color-mode (frontend) (007-admin-accounts-entry)
 - PostgreSQL 16+ via asyncpg ; 5 nouvelles tables (comptes_administratifs, recette_lines, depense_programs, depense_lines, account_change_logs) (007-admin-accounts-entry)
+- Python 3.12+ (backend), TypeScript strict (frontend) + FastAPI 0.135+, SQLAlchemy 2.0.48+ async, asyncpg, openpyxl>=3.1.0, python-docx>=1.1.0 (backend) ; Nuxt 4.4+, Tailwind CSS 4, @nuxtjs/color-mode (frontend) (008-public-consultation)
+- PostgreSQL 16+ via asyncpg ; aucune nouvelle table (lecture seule des tables existantes Features 006/007) (008-public-consultation)
 
 ## Recent Changes
 - 006-account-templates: Added Python 3.12+ (backend), TypeScript strict (frontend) + FastAPI 0.135+, SQLAlchemy 2.0.48+ async, asyncpg, openpyxl>=3.1.0 (backend) ; Nuxt 4.4+, Tailwind CSS 4, @nuxtjs/color-mode (frontend)
