@@ -5,11 +5,21 @@
 **Status**: Draft
 **Input**: User description: "Feature 9 : Fonctionnalites transverses - Newsletter, Recherche full-text, Suivi visites/telechargements, Preparation integration GlobalLeaks"
 
+## Clarifications
+
+### Session 2026-03-21
+
+- Q: Mode d'affichage des resultats de recherche (dropdown autocomplete vs page dediee vs les deux) → A: Dropdown autocomplete dans le header (max 8-10 resultats, avec lien "voir tous les resultats").
+- Q: Politique de retention des donnees de suivi (visit_logs) → A: 12 mois de retention. Pas de purge automatique : le systeme notifie l'admin quand des donnees depassent 12 mois, et l'admin declenche la purge manuellement.
+- Q: Comportement lors de la reinscription newsletter apres desinscription → A: Reactiver l'abonnement existant (meme enregistrement, statut repasse a "actif", nouveau double opt-in requis).
+- Q: Protection anti-abus sur les endpoints publics (recherche, inscription) → A: Rate limiting par IP sur les endpoints publics (recherche + inscription newsletter).
+- Q: Champs recherches dans les comptes administratifs → A: Recherche par nom de commune associee + annee d'exercice (ex: "Antsirabe 2024").
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Recherche full-text sur les collectivites et comptes (Priority: P1)
 
-Un visiteur souhaite retrouver rapidement une collectivite ou un compte administratif. Il saisit un terme dans un champ de recherche global accessible depuis toutes les pages. Les resultats affichent les collectivites (provinces, regions, communes) et comptes correspondants, classes par pertinence.
+Un visiteur souhaite retrouver rapidement une collectivite ou un compte administratif. Il saisit un terme dans un champ de recherche dans le header, accessible depuis toutes les pages. Un dropdown autocomplete affiche jusqu'a 8-10 resultats regroupes par type (collectivites, comptes), avec un lien "voir tous les resultats" pour une recherche approfondie.
 
 **Why this priority**: La recherche est le moyen le plus rapide pour un citoyen de trouver l'information qu'il cherche. C'est la fonctionnalite transverse qui apporte le plus de valeur immediate a tous les utilisateurs.
 
@@ -106,10 +116,10 @@ Un visiteur souhaite signaler un probleme de maniere anonyme et securisee. Un li
 **Recherche full-text**
 
 - **FR-001**: Le systeme DOIT offrir un champ de recherche global accessible depuis toutes les pages du site public.
-- **FR-002**: Le systeme DOIT effectuer une recherche full-text sur les noms des collectivites (provinces, regions, communes) et sur les comptes administratifs publies.
+- **FR-002**: Le systeme DOIT effectuer une recherche full-text sur les noms des collectivites (provinces, regions, communes) et sur les comptes administratifs publies (nom de commune associee + annee d'exercice).
 - **FR-003**: Le systeme DOIT trier les resultats par pertinence et les regrouper par type (collectivites, comptes).
 - **FR-004**: Le systeme DOIT supporter la recherche insensible aux accents et a la casse.
-- **FR-005**: Le systeme DOIT afficher les resultats en temps reel (recherche au fur et a mesure de la saisie, avec un delai de debounce).
+- **FR-005**: Le systeme DOIT afficher les resultats sous forme de dropdown autocomplete dans le header (max 8-10 resultats, regroupes par type), avec recherche en temps reel (debounce) et un lien "voir tous les resultats" menant a une page de resultats complets paginee (/recherche?q=...).
 
 **Newsletter**
 
@@ -117,7 +127,7 @@ Un visiteur souhaite signaler un probleme de maniere anonyme et securisee. Un li
 - **FR-007**: Le systeme DOIT valider le format de l'adresse email avant enregistrement.
 - **FR-008**: Le systeme DOIT envoyer un email de confirmation lors de l'inscription (double opt-in).
 - **FR-009**: Le systeme DOIT permettre la desinscription via un lien unique dans chaque email.
-- **FR-010**: Le systeme DOIT empecher les inscriptions en double pour une meme adresse email.
+- **FR-010**: Le systeme DOIT empecher les inscriptions en double pour une meme adresse email. Si l'adresse existe deja avec le statut "desinscrit", le systeme DOIT reactiver l'abonnement existant (statut repasse a "actif") et declencher un nouveau double opt-in.
 - **FR-011**: Le systeme DOIT fournir une interface admin pour consulter, rechercher et exporter la liste des abonnes.
 - **FR-012**: Le systeme DOIT permettre a un administrateur de supprimer manuellement un abonne.
 
@@ -128,17 +138,23 @@ Un visiteur souhaite signaler un probleme de maniere anonyme et securisee. Un li
 - **FR-015**: Le systeme DOIT fournir un tableau de bord admin affichant les statistiques de visites et telechargements.
 - **FR-016**: Le systeme DOIT permettre le filtrage des statistiques par periode (7 jours, 30 jours, 12 mois).
 - **FR-017**: Le systeme DOIT exclure les bots connus des statistiques de visites (filtrage par User-Agent).
+- **FR-018**: Le systeme DOIT notifier l'administrateur lorsque des donnees de suivi depassent 12 mois d'anciennete, via une banniere d'alerte visible dans le tableau de bord analytics.
+- **FR-019**: Le systeme DOIT permettre a l'administrateur de declencher manuellement la purge des donnees de suivi de plus de 12 mois.
 
 **Integration GlobalLeaks**
 
-- **FR-018**: Le systeme DOIT afficher un lien vers GlobalLeaks dans la navigation et/ou le pied de page.
-- **FR-019**: Le systeme DOIT fournir une page dediee expliquant le processus de signalement anonyme.
-- **FR-020**: Le systeme DOIT permettre a un administrateur de configurer l'URL de l'instance GlobalLeaks.
+- **FR-020**: Le systeme DOIT afficher un lien vers GlobalLeaks dans la navigation et/ou le pied de page.
+- **FR-021**: Le systeme DOIT fournir une page dediee expliquant le processus de signalement anonyme.
+- **FR-022**: Le systeme DOIT permettre a un administrateur de configurer l'URL de l'instance GlobalLeaks.
+
+**Securite**
+
+- **FR-023**: Le systeme DOIT appliquer un rate limiting par IP sur les endpoints publics de recherche et d'inscription newsletter afin de prevenir les abus.
 
 ### Key Entities
 
-- **NewsletterSubscriber**: Represente un abonne a la newsletter. Attributs principaux : email, date d'inscription, statut (actif/desinscrit), token de desinscription.
-- **VisitLog**: Represente un evenement de visite ou telechargement. Attributs principaux : type d'evenement (visite/telechargement), page ou ressource concernee, collectivite associee, horodatage, User-Agent.
+- **NewsletterSubscriber**: Represente un abonne a la newsletter. Attributs principaux : email, date d'inscription, statut (actif/desinscrit/en attente de confirmation), token de desinscription. Cycle de vie : inscription → en attente → actif (apres opt-in) → desinscrit → reactif possible (nouveau opt-in).
+- **VisitLog**: Represente un evenement de visite ou telechargement. Attributs principaux : type d'evenement (visite/telechargement), page ou ressource concernee, collectivite associee, horodatage, User-Agent. Retention : 12 mois, purge manuelle par l'admin apres notification.
 - **SiteConfiguration**: Represente les parametres configurables du site (ex: URL GlobalLeaks). Attributs principaux : cle, valeur, date de modification.
 
 ## Success Criteria *(mandatory)*

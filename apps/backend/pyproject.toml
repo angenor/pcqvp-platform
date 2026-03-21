@@ -17,6 +17,9 @@ dependencies = [
     "email-validator",
     "openpyxl>=3.1.0",
     "python-docx>=1.1.0",
+    "slowapi>=0.1.9",
+    "fastapi-mail>=1.4.0",
+    "itsdangerous>=2.1.0",
 ]
 
 [project.optional-dependencies]

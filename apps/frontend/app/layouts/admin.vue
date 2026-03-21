@@ -23,6 +23,12 @@ const templateNavItems = [
 const comptesNavItems = [
   { label: 'Comptes administratifs', to: '/admin/accounts' },
 ]
+
+const toolsNavItems = [
+  { label: 'Newsletter', to: '/admin/newsletter' },
+  { label: 'Analytics', to: '/admin/analytics' },
+  { label: 'Configuration', to: '/admin/config' },
+]
 </script>
 
 <template>
@@ -71,6 +77,19 @@ const comptesNavItems = [
           </NuxtLink>
           <NuxtLink
             v-for="item in comptesNavItems"
+            :key="item.to"
+            :to="item.to"
+            class="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            active-class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+          >
+            {{ item.label }}
+          </NuxtLink>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p class="px-3 mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Outils</p>
+          <NuxtLink
+            v-for="item in toolsNavItems"
             :key="item.to"
             :to="item.to"
             class="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

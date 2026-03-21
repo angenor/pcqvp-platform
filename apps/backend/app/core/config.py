@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     FIRST_ADMIN_EMAIL: str = "admin@pcqvp.mg"
     FIRST_ADMIN_PASSWORD: str = "changeme123"
 
+    MAIL_USERNAME: str = ""
+    MAIL_PASSWORD: str = ""
+    MAIL_FROM: str = "noreply@pcqvp.mg"
+    MAIL_SERVER: str = "localhost"
+    MAIL_PORT: int = 587
+    FRONTEND_URL: str = "http://localhost:3000"
+
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parents[4] / ".env",
         env_file_encoding="utf-8",

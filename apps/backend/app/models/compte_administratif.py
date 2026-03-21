@@ -182,3 +182,7 @@ class AccountChangeLog(UUIDBase):
     )
     change_type: Mapped[str] = mapped_column(String(50), nullable=False)
     detail: Mapped[dict] = mapped_column(JSONB, nullable=False)
+
+    compte_admin: Mapped["CompteAdministratif"] = relationship(
+        back_populates="change_logs"
+    )
