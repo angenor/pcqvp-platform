@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -17,7 +18,8 @@ class EditorJSBlock(BaseModel):
         if v not in SUPPORTED_BLOCK_TYPES:
             raise ValueError(
                 f"Type de bloc non supporté: {v}. "
-                f"Types acceptés: {', '.join(sorted(SUPPORTED_BLOCK_TYPES))}"
+                f"Types acceptés: "
+                f"{', '.join(sorted(SUPPORTED_BLOCK_TYPES))}"
             )
         return v
 
@@ -26,6 +28,45 @@ class EditorJSData(BaseModel):
     time: int | None = None
     blocks: list[EditorJSBlock] = []
     version: str | None = None
+
+
+def _convert_legacy_block(block: dict) -> dict:
+    """Convert old format block to EditorJS block."""
+    old_type = block.get("type", "paragraph")
+    if old_type == "heading":
+        return {
+            "type": "header",
+            "data": {"text": block.get("content", ""), "level": 2},
+        }
+    elif old_type == "image":
+        return {
+            "type": "image",
+            "data": {
+                "file": {"url": block.get("url", "")},
+                "caption": block.get("alt", ""),
+            },
+        }
+    else:
+        return {
+            "type": "paragraph",
+            "data": {"text": block.get("content", "")},
+        }
+
+
+def parse_description_json(v: Any) -> EditorJSData | None:
+    """Parse description_json, handling both old and new formats."""
+    if v is None:
+        return None
+    if isinstance(v, EditorJSData):
+        return v
+    if isinstance(v, dict) and "blocks" in v:
+        return EditorJSData(**v)
+    if isinstance(v, list):
+        if not v:
+            return None
+        blocks = [_convert_legacy_block(b) for b in v]
+        return EditorJSData(blocks=blocks)
+    return None
 
 
 # --- Province ---
@@ -60,6 +101,11 @@ class ProvinceDetail(BaseModel):
     regions: list["RegionList"] = []
     created_at: datetime
     updated_at: datetime | None = None
+
+    @field_validator("description_json", mode="before")
+    @classmethod
+    def parse_desc(cls, v: Any) -> EditorJSData | None:
+        return parse_description_json(v)
 
     model_config = {"from_attributes": True}
 
@@ -101,6 +147,11 @@ class RegionDetail(BaseModel):
     created_at: datetime
     updated_at: datetime | None = None
 
+    @field_validator("description_json", mode="before")
+    @classmethod
+    def parse_desc(cls, v: Any) -> EditorJSData | None:
+        return parse_description_json(v)
+
     model_config = {"from_attributes": True}
 
 
@@ -139,6 +190,11 @@ class CommuneDetail(BaseModel):
     description_json: EditorJSData | None = None
     created_at: datetime
     updated_at: datetime | None = None
+
+    @field_validator("description_json", mode="before")
+    @classmethod
+    def parse_desc(cls, v: Any) -> EditorJSData | None:
+        return parse_description_json(v)
 
     model_config = {"from_attributes": True}
 
