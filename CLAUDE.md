@@ -101,6 +101,8 @@ Use multiple sub-agents in parallel for efficiency (10 max):
 - PostgreSQL 16+ via asyncpg ; aucune nouvelle table (lecture seule des tables existantes Features 006/007) (008-public-consultation)
 - Python 3.12+ (backend), TypeScript strict (frontend) + FastAPI 0.135+, SQLAlchemy 2.0.48+ async, asyncpg, Nuxt 4.4+, Tailwind CSS 4 + slowapi (rate limiting), fastapi-mail (emails), itsdangerous (token signing) (010-cross-cutting-features)
 - PostgreSQL 16+ via asyncpg ; 3 nouvelles tables (newsletter_subscribers, visit_logs, site_configurations) + colonnes search_vector sur tables geography (010-cross-cutting-features)
+- Python 3.12+ (backend), TypeScript strict (frontend) + FastAPI 0.135+, SQLAlchemy 2.0.48+ async, asyncpg, Nuxt 4.4+, Tailwind CSS 4, @editorjs/editorjs + plugins (011-editorjs-rich-content)
+- PostgreSQL 16+ (JSONB pour description_json), système de fichiers local (uploads/images/) (011-editorjs-rich-content)
 
 ## Recent Changes
 - 006-account-templates: Added Python 3.12+ (backend), TypeScript strict (frontend) + FastAPI 0.135+, SQLAlchemy 2.0.48+ async, asyncpg, openpyxl>=3.1.0 (backend) ; Nuxt 4.4+, Tailwind CSS 4, @nuxtjs/color-mode (frontend)

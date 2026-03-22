@@ -15,7 +15,7 @@ const error = ref('')
 const form = ref({
   name: '',
   code: '',
-  description_json: [] as any[],
+  description_json: null as any,
 })
 
 onMounted(async () => {
@@ -120,7 +120,14 @@ async function handleSubmit() {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Description
           </label>
-          <RichContentEditor v-model="form.description_json" />
+          <ClientOnly>
+            <RichContentEditor v-model="form.description_json" />
+            <template #fallback>
+              <div class="h-50 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
+                Chargement de l'éditeur...
+              </div>
+            </template>
+          </ClientOnly>
         </div>
 
         <div class="flex items-center gap-4 pt-2">

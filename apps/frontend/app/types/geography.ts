@@ -1,5 +1,6 @@
 export type {
-  RichContentBlock,
+  EditorJSBlock,
+  EditorJSData,
   ProvinceListItem,
   ProvinceDetail,
   RegionListItem,

@@ -10,9 +10,9 @@ from app.models.geography import Commune, Province, Region
 
 
 async def create_province(
-    db: AsyncSession, name: str, code: str, description_json: list | None = None
+    db: AsyncSession, name: str, code: str, description_json: dict | None = None
 ) -> Province:
-    province = Province(name=name, code=code, description_json=description_json or [])
+    province = Province(name=name, code=code, description_json=description_json)
     db.add(province)
     await db.commit()
     await db.refresh(province)
@@ -60,7 +60,7 @@ async def update_province(
     province: Province,
     name: str,
     code: str,
-    description_json: list | None = None,
+    description_json: dict | None = None,
 ) -> Province:
     province.name = name
     province.code = code
@@ -93,13 +93,13 @@ async def create_region(
     name: str,
     code: str,
     province_id: uuid.UUID,
-    description_json: list | None = None,
+    description_json: dict | None = None,
 ) -> Region:
     region = Region(
         name=name,
         code=code,
         province_id=province_id,
-        description_json=description_json or [],
+        description_json=description_json,
     )
     db.add(region)
     await db.commit()
@@ -151,7 +151,7 @@ async def update_region(
     name: str,
     code: str,
     province_id: uuid.UUID,
-    description_json: list | None = None,
+    description_json: dict | None = None,
 ) -> Region:
     region.name = name
     region.code = code
@@ -183,13 +183,13 @@ async def create_commune(
     name: str,
     code: str,
     region_id: uuid.UUID,
-    description_json: list | None = None,
+    description_json: dict | None = None,
 ) -> Commune:
     commune = Commune(
         name=name,
         code=code,
         region_id=region_id,
-        description_json=description_json or [],
+        description_json=description_json,
     )
     db.add(commune)
     await db.commit()
@@ -237,7 +237,7 @@ async def update_commune(
     name: str,
     code: str,
     region_id: uuid.UUID,
-    description_json: list | None = None,
+    description_json: dict | None = None,
 ) -> Commune:
     commune.name = name
     commune.code = code

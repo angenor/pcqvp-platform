@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     MAIL_PORT: int = 587
     FRONTEND_URL: str = "http://localhost:3000"
 
+    UPLOAD_DIR: str = "uploads/images"
+    MAX_IMAGE_SIZE: int = 5 * 1024 * 1024
+    ALLOWED_IMAGE_TYPES: list[str] = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+    ]
+
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parents[4] / ".env",
         env_file_encoding="utf-8",

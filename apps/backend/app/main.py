@@ -1,8 +1,10 @@
 import asyncio
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 
@@ -22,6 +24,7 @@ from app.routers.newsletter import router as newsletter_router
 from app.routers.public_comptes import router as public_comptes_router
 from app.routers.public_config import router as public_config_router
 from app.routers.search import router as search_router
+from app.routers.upload import router as upload_router
 from app.routers.users import router as users_router
 
 settings = get_settings()
@@ -54,7 +57,13 @@ app.include_router(admin_newsletter_router)
 app.include_router(admin_analytics_router)
 app.include_router(admin_config_router)
 app.include_router(public_config_router)
+app.include_router(upload_router)
 app.include_router(users_router)
+
+# Serve uploaded files
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
 @app.get("/health")

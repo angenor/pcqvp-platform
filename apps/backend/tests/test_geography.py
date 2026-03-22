@@ -20,12 +20,12 @@ async def admin_headers(client: AsyncClient, db: AsyncSession) -> dict:
 
 @pytest_asyncio.fixture
 async def province_payload() -> dict:
-    return {"name": "Antananarivo", "code": "PRV-101", "description_json": []}
+    return {"name": "Antananarivo", "code": "PRV-101", "description_json": None}
 
 
 @pytest_asyncio.fixture
 async def second_province_payload() -> dict:
-    return {"name": "Toamasina", "code": "PRV-501", "description_json": []}
+    return {"name": "Toamasina", "code": "PRV-501", "description_json": None}
 
 
 async def _create_province(client: AsyncClient, headers: dict, payload: dict) -> dict:
@@ -41,7 +41,7 @@ async def _create_region(
     """Helper: create a region via admin API and return response JSON."""
     resp = await client.post(
         "/api/admin/regions",
-        json={"name": name, "code": code, "province_id": province_id, "description_json": []},
+        json={"name": name, "code": code, "province_id": province_id, "description_json": None},
         headers=headers,
     )
     assert resp.status_code == 201
@@ -54,7 +54,7 @@ async def _create_commune(
     """Helper: create a commune via admin API and return response JSON."""
     resp = await client.post(
         "/api/admin/communes",
-        json={"name": name, "code": code, "region_id": region_id, "description_json": []},
+        json={"name": name, "code": code, "region_id": region_id, "description_json": None},
         headers=headers,
     )
     assert resp.status_code == 201
@@ -222,7 +222,7 @@ class TestGeographyAdminAuth:
     async def test_admin_create_province_requires_auth(self, client: AsyncClient):
         response = await client.post(
             "/api/admin/provinces",
-            json={"name": "Test", "code": "TST", "description_json": []},
+            json={"name": "Test", "code": "TST", "description_json": None},
         )
         assert response.status_code == 403
 
@@ -239,7 +239,7 @@ class TestGeographyAdminAuth:
                 "name": "Test",
                 "code": "TST",
                 "province_id": "00000000-0000-0000-0000-000000000000",
-                "description_json": [],
+                "description_json": None,
             },
         )
         assert response.status_code == 403
@@ -257,7 +257,7 @@ class TestGeographyAdminAuth:
                 "name": "Test",
                 "code": "TST",
                 "region_id": "00000000-0000-0000-0000-000000000000",
-                "description_json": [],
+                "description_json": None,
             },
         )
         assert response.status_code == 403
@@ -288,18 +288,22 @@ class TestCrudProvince:
         payload = {
             "name": "Mahajanga",
             "code": "PRV-401",
-            "description_json": [
-                {"type": "heading", "content": "Titre"},
-                {"type": "paragraph", "content": "Contenu descriptif."},
-            ],
+            "description_json": {
+                "time": 1691234567890,
+                "blocks": [
+                    {"type": "header", "data": {"text": "Titre", "level": 2}},
+                    {"type": "paragraph", "data": {"text": "Contenu descriptif."}},
+                ],
+                "version": "2.31.0",
+            },
         }
         response = await client.post(
             "/api/admin/provinces", json=payload, headers=admin_headers
         )
         assert response.status_code == 201
         data = response.json()
-        assert len(data["description_json"]) == 2
-        assert data["description_json"][0]["type"] == "heading"
+        assert len(data["description_json"]["blocks"]) == 2
+        assert data["description_json"]["blocks"][0]["type"] == "header"
 
     @pytest.mark.asyncio
     async def test_list_provinces_admin_paginated(
@@ -307,7 +311,7 @@ class TestCrudProvince:
     ):
         for i in range(5):
             await _create_province(
-                client, admin_headers, {"name": f"Province {i}", "code": f"P-{i:03d}", "description_json": []}
+                client, admin_headers, {"name": f"Province {i}", "code": f"P-{i:03d}", "description_json": None}
             )
 
         response = await client.get(
@@ -326,7 +330,11 @@ class TestCrudProvince:
         update_payload = {
             "name": "Antananarivo Renivohitra",
             "code": "PRV-101",
-            "description_json": [{"type": "paragraph", "content": "Updated"}],
+            "description_json": {
+                "time": 1691234567890,
+                "blocks": [{"type": "paragraph", "data": {"text": "Updated"}}],
+                "version": "2.31.0",
+            },
         }
         response = await client.put(
             f"/api/admin/provinces/{created['id']}",
@@ -336,13 +344,13 @@ class TestCrudProvince:
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Antananarivo Renivohitra"
-        assert len(data["description_json"]) == 1
+        assert len(data["description_json"]["blocks"]) == 1
 
     @pytest.mark.asyncio
     async def test_update_province_not_found(self, client: AsyncClient, admin_headers):
         response = await client.put(
             "/api/admin/provinces/00000000-0000-0000-0000-000000000000",
-            json={"name": "X", "code": "X", "description_json": []},
+            json={"name": "X", "code": "X", "description_json": None},
             headers=admin_headers,
         )
         assert response.status_code == 404
@@ -385,7 +393,7 @@ class TestCrudRegion:
                 "name": "Analamanga",
                 "code": "REG-101",
                 "province_id": province["id"],
-                "description_json": [],
+                "description_json": None,
             },
             headers=admin_headers,
         )
@@ -424,7 +432,7 @@ class TestCrudRegion:
             "name": "Analamanga Updated",
             "code": "REG-101",
             "province_id": province["id"],
-            "description_json": [],
+            "description_json": None,
         }
         response = await client.put(
             f"/api/admin/regions/{region['id']}",
@@ -442,7 +450,7 @@ class TestCrudRegion:
                 "name": "X",
                 "code": "X",
                 "province_id": "00000000-0000-0000-0000-000000000000",
-                "description_json": [],
+                "description_json": None,
             },
             headers=admin_headers,
         )
@@ -489,7 +497,7 @@ class TestCrudCommune:
                 "name": "Ambohidratrimo",
                 "code": "COM-101",
                 "region_id": region["id"],
-                "description_json": [],
+                "description_json": None,
             },
             headers=admin_headers,
         )
@@ -530,7 +538,11 @@ class TestCrudCommune:
             "name": "Ambohidratrimo Updated",
             "code": "COM-101",
             "region_id": region["id"],
-            "description_json": [{"type": "paragraph", "content": "Updated"}],
+            "description_json": {
+                "time": 1691234567890,
+                "blocks": [{"type": "paragraph", "data": {"text": "Updated"}}],
+                "version": "2.31.0",
+            },
         }
         response = await client.put(
             f"/api/admin/communes/{commune['id']}",
@@ -540,7 +552,7 @@ class TestCrudCommune:
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Ambohidratrimo Updated"
-        assert len(data["description_json"]) == 1
+        assert len(data["description_json"]["blocks"]) == 1
 
     @pytest.mark.asyncio
     async def test_update_commune_not_found(self, client: AsyncClient, admin_headers):
@@ -550,7 +562,7 @@ class TestCrudCommune:
                 "name": "X",
                 "code": "X",
                 "region_id": "00000000-0000-0000-0000-000000000000",
-                "description_json": [],
+                "description_json": None,
             },
             headers=admin_headers,
         )
@@ -674,7 +686,7 @@ class TestUniqueCodeConstraint:
         await _create_province(client, admin_headers, province_payload)
         response = await client.post(
             "/api/admin/provinces",
-            json={"name": "Another Province", "code": "PRV-101", "description_json": []},
+            json={"name": "Another Province", "code": "PRV-101", "description_json": None},
             headers=admin_headers,
         )
         assert response.status_code == 409
@@ -692,7 +704,7 @@ class TestUniqueCodeConstraint:
                 "name": "Another Region",
                 "code": "REG-101",
                 "province_id": province["id"],
-                "description_json": [],
+                "description_json": None,
             },
             headers=admin_headers,
         )
@@ -712,7 +724,7 @@ class TestUniqueCodeConstraint:
                 "name": "Another Commune",
                 "code": "COM-101",
                 "region_id": region["id"],
-                "description_json": [],
+                "description_json": None,
             },
             headers=admin_headers,
         )
@@ -729,13 +741,13 @@ class TestPaginationAndSearch:
         self, client: AsyncClient, admin_headers
     ):
         await _create_province(
-            client, admin_headers, {"name": "Antananarivo", "code": "P-001", "description_json": []}
+            client, admin_headers, {"name": "Antananarivo", "code": "P-001", "description_json": None}
         )
         await _create_province(
-            client, admin_headers, {"name": "Toamasina", "code": "P-002", "description_json": []}
+            client, admin_headers, {"name": "Toamasina", "code": "P-002", "description_json": None}
         )
         await _create_province(
-            client, admin_headers, {"name": "Antsiranana", "code": "P-003", "description_json": []}
+            client, admin_headers, {"name": "Antsiranana", "code": "P-003", "description_json": None}
         )
 
         # Search for "ant" should match Antananarivo and Antsiranana (ILIKE)
@@ -757,7 +769,7 @@ class TestPaginationAndSearch:
             await _create_province(
                 client,
                 admin_headers,
-                {"name": f"Province {i:02d}", "code": f"P-{i:03d}", "description_json": []},
+                {"name": f"Province {i:02d}", "code": f"P-{i:03d}", "description_json": None},
             )
 
         response = await client.get(

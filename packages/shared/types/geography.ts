@@ -1,8 +1,13 @@
-export interface RichContentBlock {
-  type: 'heading' | 'paragraph' | 'image'
-  content?: string
-  url?: string
-  alt?: string
+export interface EditorJSBlock {
+  id?: string
+  type: 'header' | 'paragraph' | 'image' | 'table' | 'list'
+  data: Record<string, any>
+}
+
+export interface EditorJSData {
+  time?: number
+  blocks: EditorJSBlock[]
+  version?: string
 }
 
 export interface ProvinceListItem {
@@ -13,7 +18,7 @@ export interface ProvinceListItem {
 }
 
 export interface ProvinceDetail extends ProvinceListItem {
-  description_json: RichContentBlock[]
+  description_json: EditorJSData | null
   regions: RegionListItem[]
   updated_at: string | null
 }
@@ -27,7 +32,7 @@ export interface RegionListItem {
 }
 
 export interface RegionDetail extends RegionListItem {
-  description_json: RichContentBlock[]
+  description_json: EditorJSData | null
   communes: CommuneListItem[]
   updated_at: string | null
 }
@@ -41,7 +46,7 @@ export interface CommuneListItem {
 }
 
 export interface CommuneDetail extends CommuneListItem {
-  description_json: RichContentBlock[]
+  description_json: EditorJSData | null
   updated_at: string | null
 }
 

@@ -64,9 +64,8 @@ async def admin_create_province(
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        return await create_province(
-            db, data.name, data.code, [b.model_dump() for b in data.description_json]
-        )
+        desc = data.description_json.model_dump() if data.description_json else None
+        return await create_province(db, data.name, data.code, desc)
     except Exception as exc:
         if "unique" in str(exc).lower():
             raise HTTPException(
@@ -87,12 +86,13 @@ async def admin_update_province(
     if not province:
         raise HTTPException(status_code=404, detail="Province not found")
     try:
+        desc = data.description_json.model_dump() if data.description_json else None
         return await update_province(
             db,
             province,
             data.name,
             data.code,
-            [b.model_dump() for b in data.description_json],
+            desc,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -142,12 +142,13 @@ async def admin_create_region(
     db: AsyncSession = Depends(get_db),
 ):
     try:
+        desc = data.description_json.model_dump() if data.description_json else None
         return await create_region(
             db,
             data.name,
             data.code,
             data.province_id,
-            [b.model_dump() for b in data.description_json],
+            desc,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -169,13 +170,14 @@ async def admin_update_region(
     if not region:
         raise HTTPException(status_code=404, detail="Region not found")
     try:
+        desc = data.description_json.model_dump() if data.description_json else None
         return await update_region(
             db,
             region,
             data.name,
             data.code,
             data.province_id,
-            [b.model_dump() for b in data.description_json],
+            desc,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -225,12 +227,13 @@ async def admin_create_commune(
     db: AsyncSession = Depends(get_db),
 ):
     try:
+        desc = data.description_json.model_dump() if data.description_json else None
         return await create_commune(
             db,
             data.name,
             data.code,
             data.region_id,
-            [b.model_dump() for b in data.description_json],
+            desc,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -252,13 +255,14 @@ async def admin_update_commune(
     if not commune:
         raise HTTPException(status_code=404, detail="Commune not found")
     try:
+        desc = data.description_json.model_dump() if data.description_json else None
         return await update_commune(
             db,
             commune,
             data.name,
             data.code,
             data.region_id,
-            [b.model_dump() for b in data.description_json],
+            desc,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
