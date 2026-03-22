@@ -114,7 +114,7 @@ function formatNumber(val: number | string | null): string {
 }
 
 function levelClass(level: number): string {
-  if (level === 1) return 'font-bold bg-gray-50 dark:bg-gray-750'
+  if (level === 1) return 'font-bold bg-gray-50 dark:bg-gray-800/50'
   if (level === 2) return 'font-semibold pl-4'
   return 'pl-8'
 }

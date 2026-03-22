@@ -162,7 +162,7 @@ function formatDate(d: string | null): string {
 
       <table v-else class="w-full text-sm">
         <thead>
-          <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+          <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Collectivite</th>
             <th class="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Type</th>
             <th class="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Annee</th>

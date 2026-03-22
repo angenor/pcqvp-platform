@@ -243,7 +243,7 @@ function startEdit(prog: DepenseProgramResponse) {
       </div>
 
       <!-- Programme management -->
-      <div v-if="showAddProgramme" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex items-center gap-3">
+      <div v-if="showAddProgramme" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center gap-3">
         <input
           v-model="newProgrammeIntitule"
           placeholder="Intitule du programme"

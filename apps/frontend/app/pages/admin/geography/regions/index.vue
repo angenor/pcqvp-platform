@@ -130,7 +130,7 @@ async function confirmDelete() {
           <tr
             v-for="item in items"
             :key="item.id"
-            class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+            class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
           >
             <td class="px-4 py-3 text-gray-900 dark:text-gray-100">{{ item.name }}</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ item.code }}</td>
