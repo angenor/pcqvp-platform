@@ -57,7 +57,7 @@ function sectionLabel(section: string): string {
                 <td class="text-right px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">{{ formatNumber(cat.reste_a_recouvrer) }}</td>
               </tr>
               <!-- Total section -->
-              <tr class="bg-gray-50 dark:bg-gray-750 font-semibold">
+              <tr class="bg-gray-50 dark:bg-gray-800/50 font-semibold">
                 <td class="px-3 py-2 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">
                   Total {{ section.section }}
                 </td>
@@ -124,7 +124,7 @@ function sectionLabel(section: string): string {
               </template>
 
               <!-- Total section -->
-              <tr class="bg-gray-50 dark:bg-gray-750 font-semibold">
+              <tr class="bg-gray-50 dark:bg-gray-800/50 font-semibold">
                 <td class="px-3 py-2 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">
                   Total {{ section.section }}
                 </td>

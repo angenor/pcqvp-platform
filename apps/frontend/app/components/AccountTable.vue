@@ -88,7 +88,7 @@ function sectionLabel(section: string): string {
           <template v-for="line in section.lines" :key="line.compte_code">
             <!-- Niv1 row -->
             <tr
-              class="bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+              class="bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
               @click="toggleRow(line.compte_code)"
             >
               <td class="px-3 py-2 border border-gray-200 dark:border-gray-600 font-semibold text-gray-900 dark:text-white sticky left-0 bg-gray-50 dark:bg-gray-800 z-10">

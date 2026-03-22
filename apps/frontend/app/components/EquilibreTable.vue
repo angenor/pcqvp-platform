@@ -42,7 +42,7 @@ const sections = computed(() => [
                 </thead>
                 <tbody>
                   <!-- Operations reelles -->
-                  <tr class="bg-gray-50 dark:bg-gray-750">
+                  <tr class="bg-gray-50 dark:bg-gray-800/50">
                     <td colspan="2" class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                       Operations reelles
                     </td>
@@ -51,13 +51,13 @@ const sections = computed(() => [
                     <td class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200">{{ item.intitule }}</td>
                     <td class="text-right px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">{{ formatNumber(item.montant) }}</td>
                   </tr>
-                  <tr class="font-semibold bg-gray-50 dark:bg-gray-750">
+                  <tr class="font-semibold bg-gray-50 dark:bg-gray-800/50">
                     <td class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">Sous-total reelles</td>
                     <td class="text-right px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">{{ formatNumber(section.data.depenses.total_reelles) }}</td>
                   </tr>
 
                   <!-- Operations d'ordre -->
-                  <tr v-if="section.data.depenses.ordre.length > 0" class="bg-gray-50 dark:bg-gray-750">
+                  <tr v-if="section.data.depenses.ordre.length > 0" class="bg-gray-50 dark:bg-gray-800/50">
                     <td colspan="2" class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                       Operations d'ordre
                     </td>
@@ -90,7 +90,7 @@ const sections = computed(() => [
                 </thead>
                 <tbody>
                   <!-- Operations reelles -->
-                  <tr class="bg-gray-50 dark:bg-gray-750">
+                  <tr class="bg-gray-50 dark:bg-gray-800/50">
                     <td colspan="2" class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                       Operations reelles
                     </td>
@@ -99,13 +99,13 @@ const sections = computed(() => [
                     <td class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200">{{ item.intitule }}</td>
                     <td class="text-right px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">{{ formatNumber(item.montant) }}</td>
                   </tr>
-                  <tr class="font-semibold bg-gray-50 dark:bg-gray-750">
+                  <tr class="font-semibold bg-gray-50 dark:bg-gray-800/50">
                     <td class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">Sous-total reelles</td>
                     <td class="text-right px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">{{ formatNumber(section.data.recettes.total_reelles) }}</td>
                   </tr>
 
                   <!-- Operations d'ordre -->
-                  <tr v-if="section.data.recettes.ordre.length > 0" class="bg-gray-50 dark:bg-gray-750">
+                  <tr v-if="section.data.recettes.ordre.length > 0" class="bg-gray-50 dark:bg-gray-800/50">
                     <td colspan="2" class="px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                       Operations d'ordre
                     </td>

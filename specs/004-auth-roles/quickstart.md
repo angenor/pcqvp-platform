@@ -22,8 +22,7 @@ JWT_SECRET=your-secret-key-min-32-chars-change-in-production
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
-FIRST_ADMIN_EMAIL=admin@pcqvp.mg
-FIRST_ADMIN_PASSWORD=changeme123
+
 ```
 
 ## Installation des dépendances

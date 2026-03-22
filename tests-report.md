@@ -2,7 +2,6 @@
 
 **Date :** 2026-03-21
 **Environnement :** Backend http://localhost:8000 | Frontend http://localhost:3000
-**Admin :** admin@pcqvp.mg / changeme123
 **Outil :** agent-browser (mode headed)
 
 ---
