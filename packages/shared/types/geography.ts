@@ -1,7 +1,8 @@
 export interface EditorJSBlock {
   id?: string
-  type: 'header' | 'paragraph' | 'image' | 'table' | 'list'
+  type: 'header' | 'paragraph' | 'image' | 'table' | 'list' | 'quote' | 'delimiter' | 'embed' | 'checklist'
   data: Record<string, any>
+  tunes?: Record<string, any>
 }
 
 export interface EditorJSData {

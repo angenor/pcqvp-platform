@@ -13,7 +13,7 @@ function handleImageError(blockId: string) {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="rich-content space-y-4">
     <template v-if="descriptionJson?.blocks?.length">
       <template v-for="(block, index) in descriptionJson.blocks" :key="block.id || index">
         <!-- Header -->
@@ -41,7 +41,14 @@ function handleImageError(blockId: string) {
         />
 
         <!-- Image -->
-        <figure v-else-if="block.type === 'image'" class="my-2">
+        <figure
+          v-else-if="block.type === 'image'"
+          class="my-2"
+          :class="{
+            'float-left w-[45%] mr-6 mb-4': block.tunes?.imagePosition?.position === 'left',
+            'float-right w-[45%] ml-6 mb-4': block.tunes?.imagePosition?.position === 'right',
+          }"
+        >
           <img
             v-if="block.data.file?.url && !brokenImages.has(block.id || String(index))"
             :src="block.data.file.url"
@@ -97,19 +104,92 @@ function handleImageError(blockId: string) {
           </table>
         </div>
 
-        <!-- List -->
+        <!-- List (unordered) -->
         <ul
           v-else-if="block.type === 'list' && block.data.style === 'unordered'"
           class="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300"
         >
           <li v-for="(item, li) in block.data.items" :key="li" v-html="item" />
         </ul>
+
+        <!-- List (ordered) -->
         <ol
           v-else-if="block.type === 'list' && block.data.style === 'ordered'"
           class="list-decimal list-inside space-y-1 text-gray-700 dark:text-gray-300"
         >
           <li v-for="(item, li) in block.data.items" :key="li" v-html="item" />
         </ol>
+
+        <!-- Quote -->
+        <blockquote
+          v-else-if="block.type === 'quote'"
+          class="border-l-4 border-blue-400 dark:border-blue-500 pl-4 py-2 italic text-gray-700 dark:text-gray-300"
+        >
+          <p v-html="block.data.text" />
+          <cite
+            v-if="block.data.caption"
+            class="block mt-2 text-sm not-italic text-gray-500 dark:text-gray-400"
+            v-html="block.data.caption"
+          />
+        </blockquote>
+
+        <!-- Delimiter -->
+        <hr
+          v-else-if="block.type === 'delimiter'"
+          class="my-6 border-t border-gray-300 dark:border-gray-600"
+        />
+
+        <!-- Checklist -->
+        <div v-else-if="block.type === 'checklist'" class="space-y-2">
+          <div
+            v-for="(item, ci) in block.data.items"
+            :key="ci"
+            class="flex items-start gap-2"
+          >
+            <span
+              class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2"
+              :class="item.checked
+                ? 'bg-green-600 border-green-600 text-white'
+                : 'border-gray-400 dark:border-gray-500'"
+            >
+              <svg
+                v-if="item.checked"
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </span>
+            <span
+              class="text-gray-700 dark:text-gray-300"
+              :class="{ 'line-through text-gray-400 dark:text-gray-500': item.checked }"
+              v-html="item.text"
+            />
+          </div>
+        </div>
+
+        <!-- Embed -->
+        <div v-else-if="block.type === 'embed'" class="my-4">
+          <div class="relative overflow-hidden rounded-lg" style="padding-bottom: 56.25%">
+            <iframe
+              :src="block.data.embed"
+              class="absolute inset-0 h-full w-full"
+              frameborder="0"
+              allowfullscreen
+            />
+          </div>
+          <p
+            v-if="block.data.caption"
+            class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400"
+            v-html="block.data.caption"
+          />
+        </div>
       </template>
     </template>
     <p v-else class="text-gray-500 dark:text-gray-400 italic">

@@ -4,7 +4,17 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-SUPPORTED_BLOCK_TYPES = {"header", "paragraph", "image", "table", "list"}
+SUPPORTED_BLOCK_TYPES = {
+    "header",
+    "paragraph",
+    "image",
+    "table",
+    "list",
+    "quote",
+    "delimiter",
+    "embed",
+    "checklist",
+}
 
 
 class EditorJSBlock(BaseModel):
