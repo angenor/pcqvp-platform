@@ -46,7 +46,7 @@ function handleCardClick() {
     <!-- Header: name + menu -->
     <div class="flex items-start justify-between gap-2">
       <div class="min-w-0 flex-1">
-        <h3 class="text-base font-semibold text-(--text-primary) truncate">
+        <h3 class="text-base font-semibold text-(--text-primary)">
           {{ name }}
         </h3>
         <p class="text-sm text-(--text-muted) mt-0.5">{{ code }}</p>
