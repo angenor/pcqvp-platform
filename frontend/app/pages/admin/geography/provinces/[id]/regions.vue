@@ -1,53 +1,40 @@
 <script setup lang="ts">
-import type { RegionListItem, ProvinceListItem } from '~/types/geography'
+import type { ProvinceDetail } from '~/types/geography'
 
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
 })
 
-const { fetchRegions, fetchProvinces, deleteRegion } = useGeography()
+const route = useRoute()
+const { fetchProvinceDetail, deleteRegion } = useGeography()
 
+const province = ref<ProvinceDetail | null>(null)
 const search = ref('')
-const selectedProvinceId = ref('')
-const provinces = ref<ProvinceListItem[]>([])
-const items = ref<RegionListItem[]>([])
 const loading = ref(true)
+const error = ref('')
 const deleteError = ref('')
 const deletingId = ref<string | null>(null)
 
-const filteredItems = computed(() => {
-  if (!search.value) return items.value
+const filteredRegions = computed(() => {
+  if (!province.value) return []
+  if (!search.value) return province.value.regions
   const q = search.value.toLowerCase()
-  return items.value.filter(r => r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q))
+  return province.value.regions.filter(r => r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q))
 })
-
-const provinceOptions = computed(() => [
-  { value: '', label: 'Toutes les provinces' },
-  ...provinces.value.map(p => ({ value: p.id, label: p.name })),
-])
 
 async function loadData() {
   loading.value = true
   try {
-    items.value = await fetchRegions(selectedProvinceId.value || undefined)
+    province.value = await fetchProvinceDetail(route.params.id as string)
+  } catch {
+    error.value = 'Province introuvable'
   } finally {
     loading.value = false
   }
 }
 
-onMounted(async () => {
-  try {
-    provinces.value = await fetchProvinces()
-  } catch {
-    provinces.value = []
-  }
-  await loadData()
-})
-
-watch(selectedProvinceId, () => {
-  loadData()
-})
+onMounted(loadData)
 
 function handleEdit(id: string) {
   navigateTo(`/admin/geography/regions/${id}`)
@@ -72,28 +59,33 @@ async function confirmDelete() {
 
 <template>
   <div>
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm mb-4 text-(--text-muted)">
+      <NuxtLink to="/admin/geography/provinces" class="hover:text-(--text-primary) transition-colors">
+        Provinces
+      </NuxtLink>
+      <font-awesome-icon :icon="['fas', 'chevron-right']" class="text-xs" />
+      <span class="text-(--text-primary) font-medium">{{ province?.name ?? '...' }}</span>
+      <font-awesome-icon :icon="['fas', 'chevron-right']" class="text-xs" />
+      <span>Régions</span>
+    </nav>
+
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-(--text-primary)">Régions</h1>
+      <h1 class="text-2xl font-bold text-(--text-primary)">
+        Régions de {{ province?.name ?? '...' }}
+      </h1>
       <UiButton to="/admin/geography/regions/new" :icon="['fas', 'plus']">
         Nouvelle région
       </UiButton>
     </div>
 
-    <!-- Filters -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-4">
-      <div class="max-w-xs">
-        <UiFormSelect
-          v-model="selectedProvinceId"
-          :options="provinceOptions"
-        />
-      </div>
-      <div class="max-w-sm flex-1">
-        <UiFormInput
-          v-model="search"
-          placeholder="Rechercher une région..."
-          :icon="['fas', 'magnifying-glass']"
-        />
-      </div>
+    <!-- Search -->
+    <div class="mb-4 max-w-sm">
+      <UiFormInput
+        v-model="search"
+        placeholder="Rechercher une région..."
+        :icon="['fas', 'magnifying-glass']"
+      />
     </div>
 
     <!-- Loading -->
@@ -101,26 +93,29 @@ async function confirmDelete() {
       <UiLoadingSpinner size="lg" />
     </div>
 
+    <!-- Error -->
+    <UiAlert v-else-if="error" variant="error">{{ error }}</UiAlert>
+
     <!-- Grid -->
-    <div v-else-if="filteredItems.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div v-else-if="filteredRegions.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <GeographyCard
-        v-for="item in filteredItems"
-        :key="item.id"
-        :id="item.id"
-        :name="item.name"
-        :code="item.code"
+        v-for="region in filteredRegions"
+        :key="region.id"
+        :id="region.id"
+        :name="region.name"
+        :code="region.code"
         type="region"
         :show-financial-links="true"
-        :click-route="`/admin/geography/regions/${item.id}/communes`"
-        @edit="handleEdit(item.id)"
-        @delete="handleDelete(item.id)"
+        :click-route="`/admin/geography/regions/${region.id}/communes`"
+        @edit="handleEdit(region.id)"
+        @delete="handleDelete(region.id)"
       />
     </div>
 
     <!-- Empty state -->
     <div v-else class="flex flex-col items-center justify-center py-12 text-center">
       <font-awesome-icon :icon="['fas', 'map-marked']" class="text-4xl mb-3 text-(--text-muted)" />
-      <p class="text-sm text-(--text-muted)">Aucune région</p>
+      <p class="text-sm text-(--text-muted)">Aucune région pour cette province</p>
       <UiButton class="mt-4" to="/admin/geography/regions/new" :icon="['fas', 'plus']">
         Nouvelle région
       </UiButton>

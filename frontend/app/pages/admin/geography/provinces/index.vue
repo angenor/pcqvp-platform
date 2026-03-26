@@ -1,35 +1,29 @@
 <script setup lang="ts">
+import type { ProvinceListItem } from '~/types/geography'
+
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
 })
 
-const { fetchAdminProvinces, deleteProvince } = useGeography()
+const { fetchProvinces, deleteProvince } = useGeography()
 
 const search = ref('')
-const currentPage = ref(1)
-const pageSize = 20
-const items = ref<any[]>([])
-const total = ref(0)
+const items = ref<ProvinceListItem[]>([])
 const loading = ref(true)
 const deleteError = ref('')
 const deletingId = ref<string | null>(null)
 
-const columns = [
-  { key: 'name', label: 'Nom' },
-  { key: 'code', label: 'Code' },
-]
+const filteredItems = computed(() => {
+  if (!search.value) return items.value
+  const q = search.value.toLowerCase()
+  return items.value.filter(p => p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q))
+})
 
 async function loadData() {
   loading.value = true
   try {
-    const result = await fetchAdminProvinces({
-      search: search.value || undefined,
-      skip: (currentPage.value - 1) * pageSize,
-      limit: pageSize,
-    })
-    items.value = result.items
-    total.value = result.total
+    items.value = await fetchProvinces()
   } finally {
     loading.value = false
   }
@@ -37,14 +31,11 @@ async function loadData() {
 
 onMounted(loadData)
 
-watch([search], () => {
-  currentPage.value = 1
-  loadData()
-})
+function handleEdit(id: string) {
+  navigateTo(`/admin/geography/provinces/${id}`)
+}
 
-watch(currentPage, loadData)
-
-async function handleDelete(id: string) {
+function handleDelete(id: string) {
   deletingId.value = id
   deleteError.value = ''
 }
@@ -70,39 +61,42 @@ async function confirmDelete() {
       </UiButton>
     </div>
 
-    <UiDataTable
-      :columns="columns"
-      :data="items"
-      :loading="loading"
-      search-placeholder="Rechercher une province..."
-      :pagination="false"
-      @search="(q) => { search = q; currentPage = 1; loadData() }"
-    >
-      <template #actions="{ row }">
-        <div class="flex items-center justify-end gap-2">
-          <UiButton variant="ghost" size="sm" :to="`/admin/geography/provinces/${row.id}`" :icon="['fas', 'pen']">
-            Modifier
-          </UiButton>
-          <UiButton variant="ghost" size="sm" class="text-(--color-error)" :icon="['fas', 'trash']" @click="handleDelete(row.id)">
-            Supprimer
-          </UiButton>
-        </div>
-      </template>
-    </UiDataTable>
+    <!-- Search -->
+    <div class="mb-4 max-w-sm">
+      <UiFormInput
+        v-model="search"
+        placeholder="Rechercher une province..."
+        :icon="['fas', 'magnifying-glass']"
+      />
+    </div>
 
-    <!-- Pagination externe (server-side) -->
-    <div v-if="Math.ceil(total / pageSize) > 1" class="flex items-center justify-between mt-4">
-      <p class="text-sm text-(--text-muted)">
-        Page {{ currentPage }} sur {{ Math.ceil(total / pageSize) }} ({{ total }} resultats)
-      </p>
-      <div class="flex gap-2">
-        <UiButton variant="outline" size="sm" :disabled="currentPage <= 1" @click="currentPage--">
-          Precedent
-        </UiButton>
-        <UiButton variant="outline" size="sm" :disabled="currentPage >= Math.ceil(total / pageSize)" @click="currentPage++">
-          Suivant
-        </UiButton>
-      </div>
+    <!-- Loading -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <UiLoadingSpinner size="lg" />
+    </div>
+
+    <!-- Grid -->
+    <div v-else-if="filteredItems.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <GeographyCard
+        v-for="item in filteredItems"
+        :key="item.id"
+        :id="item.id"
+        :name="item.name"
+        :code="item.code"
+        type="province"
+        :click-route="`/admin/geography/provinces/${item.id}/regions`"
+        @edit="handleEdit(item.id)"
+        @delete="handleDelete(item.id)"
+      />
+    </div>
+
+    <!-- Empty state -->
+    <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+      <font-awesome-icon :icon="['fas', 'map']" class="text-4xl mb-3 text-(--text-muted)" />
+      <p class="text-sm text-(--text-muted)">Aucune province</p>
+      <UiButton class="mt-4" to="/admin/geography/provinces/new" :icon="['fas', 'plus']">
+        Nouvelle province
+      </UiButton>
     </div>
 
     <!-- Delete modal -->

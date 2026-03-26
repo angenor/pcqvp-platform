@@ -86,6 +86,8 @@ import {
   faRotateRight,
   faCircleCheck,
   faScaleBalanced,
+  faEllipsisVertical,
+  faPlusCircle,
 } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -179,6 +181,8 @@ library.add(
   faRotateRight,
   faCircleCheck,
   faScaleBalanced,
+  faEllipsisVertical,
+  faPlusCircle,
   farFile,
 )
 

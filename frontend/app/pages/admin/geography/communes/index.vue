@@ -1,71 +1,76 @@
 <script setup lang="ts">
+import type { CommuneListItem, RegionListItem, ProvinceListItem } from '~/types/geography'
+
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
 })
 
-const { fetchAdminCommunes, deleteCommune, fetchRegions } = useGeography()
+const { fetchCommunes, fetchRegions, fetchProvinces, deleteCommune } = useGeography()
 
 const search = ref('')
-const currentPage = ref(1)
-const pageSize = 20
-const items = ref<any[]>([])
-const total = ref(0)
+const selectedProvinceId = ref('')
+const selectedRegionId = ref('')
+const provinces = ref<ProvinceListItem[]>([])
+const regions = ref<RegionListItem[]>([])
+const items = ref<CommuneListItem[]>([])
 const loading = ref(true)
 const deleteError = ref('')
 const deletingId = ref<string | null>(null)
-const selectedRegionId = ref<string>('')
-const regions = ref<any[]>([])
 
-const columns = [
-  { key: 'name', label: 'Nom' },
-  { key: 'code', label: 'Code' },
-  { key: 'region_name', label: 'Region' },
-]
+const filteredItems = computed(() => {
+  if (!search.value) return items.value
+  const q = search.value.toLowerCase()
+  return items.value.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q))
+})
 
-async function loadRegions() {
-  try {
-    const result = await fetchRegions()
-    regions.value = result.items ?? result
-  } catch {
-    regions.value = []
-  }
-}
+const provinceOptions = computed(() => [
+  { value: '', label: 'Toutes les provinces' },
+  ...provinces.value.map(p => ({ value: p.id, label: p.name })),
+])
 
-async function loadData() {
+const regionOptions = computed(() => [
+  { value: '', label: 'Toutes les régions' },
+  ...regions.value.map(r => ({ value: r.id, label: r.name })),
+])
+
+async function loadCommunes() {
   loading.value = true
   try {
-    const result = await fetchAdminCommunes({
-      search: search.value || undefined,
-      region_id: selectedRegionId.value || undefined,
-      skip: (currentPage.value - 1) * pageSize,
-      limit: pageSize,
-    })
-    items.value = result.items.map((i: any) => ({ ...i, region_name: i.region?.name ?? '-' }))
-    total.value = result.total
+    items.value = await fetchCommunes(selectedRegionId.value || undefined)
   } finally {
     loading.value = false
   }
 }
 
 onMounted(async () => {
-  await loadRegions()
-  await loadData()
+  try {
+    provinces.value = await fetchProvinces()
+  } catch {
+    provinces.value = []
+  }
+  await loadCommunes()
 })
 
-watch([search, selectedRegionId], () => {
-  currentPage.value = 1
-  loadData()
+watch(selectedProvinceId, async (provinceId) => {
+  selectedRegionId.value = ''
+  if (provinceId) {
+    regions.value = await fetchRegions(provinceId)
+  } else {
+    regions.value = []
+  }
+  await loadCommunes()
 })
 
-watch(currentPage, loadData)
+watch(selectedRegionId, () => {
+  loadCommunes()
+})
 
-const regionOptions = computed(() => [
-  { value: '', label: 'Toutes les regions' },
-  ...regions.value.map((r: any) => ({ value: r.id, label: r.name })),
-])
+function handleEdit(id: string) {
+  navigateTo(`/admin/geography/communes/${id}`)
+}
 
-async function handleDelete(id: string) {
+function handleDelete(id: string) {
   deletingId.value = id
   deleteError.value = ''
 }
@@ -75,7 +80,7 @@ async function confirmDelete() {
   try {
     await deleteCommune(deletingId.value)
     deletingId.value = null
-    await loadData()
+    await loadCommunes()
   } catch (e: any) {
     deleteError.value = e?.response?._data?.detail || e?.data?.detail || 'Erreur lors de la suppression'
   }
@@ -91,44 +96,59 @@ async function confirmDelete() {
       </UiButton>
     </div>
 
-    <div class="mb-4">
-      <UiFormSelect
-        v-model="selectedRegionId"
-        :options="regionOptions"
-        class="max-w-xs"
-      />
-    </div>
-
-    <UiDataTable
-      :columns="columns"
-      :data="items"
-      :loading="loading"
-      search-placeholder="Rechercher une commune..."
-      :pagination="false"
-      @search="(q) => { search = q; currentPage = 1; loadData() }"
-    >
-      <template #actions="{ row }">
-        <div class="flex items-center justify-end gap-2">
-          <UiButton variant="ghost" size="sm" :to="`/admin/geography/communes/${row.id}`" :icon="['fas', 'pen']">
-            Modifier
-          </UiButton>
-          <UiButton variant="ghost" size="sm" class="text-(--color-error)" :icon="['fas', 'trash']" @click="handleDelete(row.id)">
-            Supprimer
-          </UiButton>
-        </div>
-      </template>
-    </UiDataTable>
-
-    <div v-if="Math.ceil(total / pageSize) > 1" class="flex items-center justify-between mt-4">
-      <p class="text-sm text-(--text-muted)">
-        Page {{ currentPage }} sur {{ Math.ceil(total / pageSize) }} ({{ total }} resultats)
-      </p>
-      <div class="flex gap-2">
-        <UiButton variant="outline" size="sm" :disabled="currentPage <= 1" @click="currentPage--">Precedent</UiButton>
-        <UiButton variant="outline" size="sm" :disabled="currentPage >= Math.ceil(total / pageSize)" @click="currentPage++">Suivant</UiButton>
+    <!-- Filters -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+      <div class="max-w-xs">
+        <UiFormSelect
+          v-model="selectedProvinceId"
+          :options="provinceOptions"
+        />
+      </div>
+      <div class="max-w-xs">
+        <UiFormSelect
+          v-model="selectedRegionId"
+          :options="regionOptions"
+          :disabled="regions.length === 0 && !selectedProvinceId"
+        />
+      </div>
+      <div class="max-w-sm flex-1">
+        <UiFormInput
+          v-model="search"
+          placeholder="Rechercher une commune..."
+          :icon="['fas', 'magnifying-glass']"
+        />
       </div>
     </div>
 
+    <!-- Loading -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <UiLoadingSpinner size="lg" />
+    </div>
+
+    <!-- Grid -->
+    <div v-else-if="filteredItems.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <GeographyCard
+        v-for="item in filteredItems"
+        :key="item.id"
+        :id="item.id"
+        :name="item.name"
+        :code="item.code"
+        type="commune"
+        @edit="handleEdit(item.id)"
+        @delete="handleDelete(item.id)"
+      />
+    </div>
+
+    <!-- Empty state -->
+    <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+      <font-awesome-icon :icon="['fas', 'city']" class="text-4xl mb-3 text-(--text-muted)" />
+      <p class="text-sm text-(--text-muted)">Aucune commune</p>
+      <UiButton class="mt-4" to="/admin/geography/communes/new" :icon="['fas', 'plus']">
+        Nouvelle commune
+      </UiButton>
+    </div>
+
+    <!-- Delete modal -->
     <UiModal :model-value="!!deletingId" title="Confirmer la suppression" danger @close="deletingId = null">
       <p class="text-sm text-(--text-secondary)">
         Etes-vous sur de vouloir supprimer cette commune ? Cette action est irreversible.

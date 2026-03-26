@@ -7,7 +7,7 @@ definePageMeta({
 })
 
 const { createCompte } = useComptes()
-const { fetchProvinces, fetchRegions, fetchCommunes } = useGeography()
+const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail } = useGeography()
 
 const collectiviteType = ref<'province' | 'region' | 'commune'>('commune')
 const provinces = ref<ProvinceListItem[]>([])
@@ -39,9 +39,29 @@ const communeOptions = computed(() =>
   communes.value.map(c => ({ value: c.id, label: c.name }))
 )
 
+const route = useRoute()
+
 onMounted(async () => {
   try {
     provinces.value = await fetchProvinces()
+
+    // Pre-fill from query params (e.g. from GeographyCard financial links)
+    const qType = route.query.collectivite_type as string | undefined
+    const qId = route.query.collectivite_id as string | undefined
+    if (qType && ['province', 'region', 'commune'].includes(qType)) {
+      collectiviteType.value = qType as 'province' | 'region' | 'commune'
+      if (qType === 'region' && qId) {
+        // Find province for this region, then set region
+        const regionDetail = await fetchRegionDetail(qId)
+        if (regionDetail.province_id) {
+          selectedProvinceId.value = regionDetail.province_id
+          regions.value = await fetchRegions(regionDetail.province_id)
+          selectedRegionId.value = qId
+        }
+      } else if (qType === 'province' && qId) {
+        selectedProvinceId.value = qId
+      }
+    }
   } finally {
     loading.value = false
   }

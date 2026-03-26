@@ -15,12 +15,12 @@ defineEmits<{
 }>()
 
 const variantClasses: Record<string, string> = {
-  primary: 'bg-(--color-primary) text-white hover:bg-(--color-primary-700) shadow-sm',
-  secondary: 'bg-(--interactive-hover) text-(--text-primary) hover:bg-(--interactive-active)',
-  outline: 'border border-(--border-default) text-(--text-primary) hover:bg-(--interactive-hover)',
-  ghost: 'text-(--text-secondary) hover:bg-(--interactive-hover) hover:text-(--text-primary)',
-  danger: 'bg-(--color-error) text-white hover:bg-(--color-error-dark) shadow-sm',
-  success: 'bg-(--color-success) text-white hover:bg-(--color-success-dark) shadow-sm',
+  primary: 'bg-(--color-primary) !text-white hover:bg-(--color-primary-700) hover:!text-white shadow-sm',
+  secondary: 'bg-(--interactive-hover) !text-(--text-primary) hover:bg-(--interactive-active) hover:!text-(--text-primary)',
+  outline: 'border border-(--border-default) !text-(--text-primary) hover:bg-(--interactive-hover) hover:!text-(--text-primary)',
+  ghost: '!text-(--text-secondary) hover:bg-(--interactive-hover) hover:!text-(--text-primary)',
+  danger: 'bg-(--color-error) !text-white hover:bg-(--color-error-dark) hover:!text-white shadow-sm',
+  success: 'bg-(--color-success) !text-white hover:bg-(--color-success-dark) hover:!text-white shadow-sm',
 }
 
 const sizeClasses: Record<string, string> = {
