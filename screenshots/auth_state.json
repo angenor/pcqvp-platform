@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "refresh_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMGNhNTA4NS02MTE4LTRjODctYjFkZC0xN2ExOTM4M2RhMDciLCJleHAiOjE3NzQ3MjIzNTUsInR5cGUiOiJyZWZyZXNoIn0.GjeRKLJl2LOsSotbOX7lRQMOLKAGg757OluTnli9YIk",
+      "domain": "localhost",
+      "path": "/api/auth",
+      "expires": 1774722355.245179,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "nuxt-color-mode",
+          "value": "system"
+        }
+      ]
+    }
+  ]
+}
