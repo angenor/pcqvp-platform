@@ -69,11 +69,11 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
 
     <!-- Contenu principal sous le hero -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <!-- Section Carte Interactive avec Statistiques -->
+      <HomeMapSection />
+
       <!-- Section Statistiques -->
       <HomeStatsSection />
-
-      <!-- Section Cartes informatives -->
-      <HomeInfoCards />
     </main>
   </div>
 </template>

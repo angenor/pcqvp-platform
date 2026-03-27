@@ -35,8 +35,9 @@ const logoSrc = computed(() => {
           <nav class="flex items-center gap-4">
             <NuxtLink
               to="/signaler"
-              class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+              class="inline-flex items-center gap-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white! px-4 py-2 rounded-lg transition-colors"
             >
+              <font-awesome-icon icon="bullhorn" class="w-4 h-4" />
               Signaler
             </NuxtLink>
 
@@ -88,7 +89,8 @@ const logoSrc = computed(() => {
             </h3>
             <ul class="space-y-2">
               <li>
-                <NuxtLink to="/signaler" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <NuxtLink to="/signaler" class="inline-flex items-center gap-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white! px-4 py-2 rounded-lg transition-colors">
+                  <font-awesome-icon icon="bullhorn" class="w-4 h-4" />
                   Signaler
                 </NuxtLink>
               </li>

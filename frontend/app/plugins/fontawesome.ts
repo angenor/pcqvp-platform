@@ -88,6 +88,7 @@ import {
   faScaleBalanced,
   faEllipsisVertical,
   faPlusCircle,
+  faBullhorn,
 } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -183,6 +184,7 @@ library.add(
   faScaleBalanced,
   faEllipsisVertical,
   faPlusCircle,
+  faBullhorn,
   farFile,
 )
 
