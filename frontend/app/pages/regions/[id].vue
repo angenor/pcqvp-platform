@@ -1,18 +1,23 @@
 <script setup lang="ts">
 const route = useRoute()
 const { fetchRegionDetail, fetchProvinceDetail } = useGeography()
+const { fetchAnnees } = usePublicComptes()
 
 const region = ref<any>(null)
 const parentProvince = ref<any>(null)
+const annees = ref<number[]>([])
 const error = ref(false)
 const loading = ref(true)
 
 onMounted(async () => {
   try {
     region.value = await fetchRegionDetail(route.params.id as string)
-    if (region.value?.province_id) {
-      parentProvince.value = await fetchProvinceDetail(region.value.province_id)
-    }
+    const [province, years] = await Promise.all([
+      region.value?.province_id ? fetchProvinceDetail(region.value.province_id) : null,
+      fetchAnnees('region', route.params.id as string),
+    ])
+    parentProvince.value = province
+    annees.value = years
   } catch {
     error.value = true
   } finally {
@@ -50,6 +55,39 @@ onMounted(async () => {
 
         <div class="mt-6">
           <RichContentRenderer :description-json="region.description_json" />
+        </div>
+
+        <!-- Comptes administratifs -->
+        <div class="mt-8">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Comptes administratifs</h2>
+          <div v-if="annees.length > 0" class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                  <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Annee d'exercice</th>
+                  <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="annee in annees"
+                  :key="annee"
+                  class="border-b border-gray-100 dark:border-gray-800"
+                >
+                  <td class="py-3 px-4 text-gray-900 dark:text-white font-mono">{{ annee }}</td>
+                  <td class="py-3 px-4 text-right">
+                    <NuxtLink
+                      :to="`/collectivite/region-${route.params.id}?annee=${annee}`"
+                      class="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                    >
+                      Consulter
+                    </NuxtLink>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-else class="text-gray-500 dark:text-gray-400 text-sm">Aucun compte administratif publie.</p>
         </div>
 
         <div v-if="region.communes?.length" class="mt-8">

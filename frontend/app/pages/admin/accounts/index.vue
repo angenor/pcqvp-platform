@@ -8,7 +8,7 @@ definePageMeta({
 })
 
 const { fetchComptes } = useComptes()
-const { fetchProvinces, fetchRegions, fetchCommunes } = useGeography()
+const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail } = useGeography()
 
 const items = ref<CompteListItem[]>([])
 const total = ref(0)
@@ -22,6 +22,7 @@ const selectedProvinceId = ref('')
 const selectedRegionId = ref('')
 const selectedCommuneId = ref('')
 const filterAnnee = ref<string>('')
+const initializing = ref(true)
 
 const columns = [
   { key: 'collectivite_name', label: 'Collectivite' },
@@ -48,12 +49,34 @@ const regionOptions = computed(() => [
   ...regions.value.map(r => ({ value: r.id, label: r.name })),
 ])
 
+const route = useRoute()
+
 onMounted(async () => {
   provinces.value = await fetchProvinces()
+
+  // Pre-fill filters from query params (e.g. from "Voir les comptes" link)
+  const qType = route.query.collectivite_type as string | undefined
+  const qId = route.query.collectivite_id as string | undefined
+  if (qType && ['province', 'region', 'commune'].includes(qType)) {
+    filterType.value = qType
+    if (qType === 'region' && qId) {
+      const regionDetail = await fetchRegionDetail(qId)
+      if (regionDetail.province_id) {
+        selectedProvinceId.value = regionDetail.province_id
+        regions.value = await fetchRegions(regionDetail.province_id)
+        selectedRegionId.value = qId
+      }
+    } else if (qType === 'province' && qId) {
+      selectedProvinceId.value = qId
+    }
+  }
+
+  initializing.value = false
   await loadData()
 })
 
 watch(selectedProvinceId, async (id) => {
+  if (initializing.value) return
   selectedRegionId.value = ''
   selectedCommuneId.value = ''
   regions.value = []
@@ -65,6 +88,7 @@ watch(selectedProvinceId, async (id) => {
 })
 
 watch(selectedRegionId, async (id) => {
+  if (initializing.value) return
   selectedCommuneId.value = ''
   communes.value = []
   if (id) {
@@ -73,7 +97,10 @@ watch(selectedRegionId, async (id) => {
   loadData()
 })
 
-watch([selectedCommuneId, filterType, filterAnnee], () => loadData())
+watch([selectedCommuneId, filterType, filterAnnee], () => {
+  if (initializing.value) return
+  loadData()
+})
 
 const selectedCollectiviteId = computed(() => {
   if (filterType.value === 'commune' && selectedCommuneId.value) return selectedCommuneId.value

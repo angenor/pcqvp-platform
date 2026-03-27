@@ -129,6 +129,14 @@ async function handleSubmit() {
           <UiButton variant="ghost" to="/admin/geography/regions">
             Annuler
           </UiButton>
+          <UiButton
+            v-if="!isNew"
+            variant="ghost"
+            :to="`/admin/accounts?collectivite_type=region&collectivite_id=${route.params.id}`"
+            :icon="['fas', 'calculator']"
+          >
+            Voir les comptes
+          </UiButton>
         </div>
       </form>
     </template>
