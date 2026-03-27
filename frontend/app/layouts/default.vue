@@ -74,8 +74,8 @@ const logoSrc = computed(() => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <!-- À propos -->
           <div>
-            <h3 class="font-bold text-lg mb-3 text-white">À propos</h3>
-            <p class="text-gray-300 dark:text-gray-400 text-sm">
+            <h3 class="font-bold text-lg mb-3 text-white!">À propos</h3>
+            <p class="text-gray-200 dark:text-gray-400 text-sm">
               Projet "Minerais critiques : justice fiscale et redistribution de revenus"
               mené par PCQVP Madagascar et TI Madagascar.
             </p>
@@ -83,8 +83,8 @@ const logoSrc = computed(() => {
 
           <!-- Contact -->
           <div>
-            <h3 class="font-bold text-lg mb-3 text-white">Contact</h3>
-            <p class="text-gray-300 dark:text-gray-400 text-sm">
+            <h3 class="font-bold text-lg mb-3 text-white!">Contact</h3>
+            <p class="text-gray-200 dark:text-gray-400 text-sm">
               Email: vramaherison@transparency.mg<br>
               Transparency International - Initiative Madagascar
             </p>
@@ -92,8 +92,8 @@ const logoSrc = computed(() => {
 
           <!-- Ressources -->
           <div>
-            <h3 class="font-bold text-lg mb-3 text-white">Ressources</h3>
-            <p class="text-gray-300 dark:text-gray-400 text-sm">
+            <h3 class="font-bold text-lg mb-3 text-white!">Ressources</h3>
+            <p class="text-gray-200 dark:text-gray-400 text-sm">
               Plateforme de suivi des revenus miniers<br>
               Collectivités Territoriales de Madagascar
             </p>
@@ -106,9 +106,9 @@ const logoSrc = computed(() => {
           </div>
         </div>
 
-        <div class="border-t border-gray-700 dark:border-gray-800 mt-8 pt-6 text-center text-gray-300 dark:text-gray-500 text-sm">
+        <div class="border-t border-gray-700 dark:border-gray-800 mt-8 pt-6 text-center text-gray-200 dark:text-gray-500 text-sm">
           <p>&copy; {{ new Date().getFullYear() }} PCQVP Madagascar. Tous droits réservés.</p>
-          <p class="mt-3 text-gray-400 dark:text-gray-600">
+          <p class="mt-3 text-gray-300 dark:text-gray-600">
             Plateforme développée par
             <a
               href="https://www.linkedin.com/company/herhero-forchange/"
