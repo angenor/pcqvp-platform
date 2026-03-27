@@ -79,6 +79,80 @@ async def create_compte(
     return compte
 
 
+async def update_compte(
+    db: AsyncSession,
+    compte_id: uuid.UUID,
+    data: dict,
+    user_id: uuid.UUID,
+) -> CompteAdministratif | str:
+    """Update compte metadata (collectivite_type, collectivite_id, annee_exercice)."""
+    compte = await get_compte_by_id(db, compte_id)
+    if not compte:
+        return "Compte non trouve"
+
+    new_type = data.get("collectivite_type") or compte.collectivite_type.value
+    new_id = data.get("collectivite_id") or compte.collectivite_id
+    new_annee = data.get("annee_exercice") or compte.annee_exercice
+
+    # Validate collectivite if changed
+    if new_type != compte.collectivite_type.value or new_id != compte.collectivite_id:
+        name = await validate_collectivite(db, new_type, new_id)
+        if name is None:
+            return "Collectivite non trouvee"
+
+    # Check uniqueness if anything changed
+    if (
+        new_type != compte.collectivite_type.value
+        or new_id != compte.collectivite_id
+        or new_annee != compte.annee_exercice
+    ):
+        existing = await db.execute(
+            select(CompteAdministratif).where(
+                CompteAdministratif.collectivite_type == new_type,
+                CompteAdministratif.collectivite_id == new_id,
+                CompteAdministratif.annee_exercice == new_annee,
+                CompteAdministratif.id != compte_id,
+            )
+        )
+        if existing.scalar_one_or_none():
+            return "Un compte existe deja pour cette collectivite et cette annee"
+
+    old_values = {
+        "collectivite_type": compte.collectivite_type.value,
+        "collectivite_id": str(compte.collectivite_id),
+        "annee_exercice": compte.annee_exercice,
+    }
+
+    if data.get("collectivite_type"):
+        compte.collectivite_type = data["collectivite_type"]
+    if data.get("collectivite_id"):
+        compte.collectivite_id = data["collectivite_id"]
+    if data.get("annee_exercice"):
+        compte.annee_exercice = data["annee_exercice"]
+
+    # Changelog
+    log = AccountChangeLog(
+        compte_admin_id=compte_id,
+        user_id=user_id,
+        change_type="compte_update",
+        detail={
+            "old_values": old_values,
+            "new_values": {
+                "collectivite_type": compte.collectivite_type.value
+                if hasattr(compte.collectivite_type, "value")
+                else compte.collectivite_type,
+                "collectivite_id": str(compte.collectivite_id),
+                "annee_exercice": compte.annee_exercice,
+            },
+        },
+    )
+    db.add(log)
+
+    await db.commit()
+    await db.refresh(compte)
+    return compte
+
+
 async def get_compte_by_id(
     db: AsyncSession, compte_id: uuid.UUID
 ) -> CompteAdministratif | None:

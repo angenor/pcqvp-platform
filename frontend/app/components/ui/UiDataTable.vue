@@ -17,6 +17,7 @@ const props = defineProps<{
   emptyMessage?: string
   pagination?: boolean
   pageSize?: number
+  rowLink?: (row: any) => string | undefined
 }>()
 
 const emit = defineEmits<{
@@ -92,6 +93,15 @@ function goToPage(page: number) {
 
 watch(searchQuery, handleSearch)
 
+const router = useRouter()
+
+function onRowClick(row: any) {
+  if (props.rowLink) {
+    const link = props.rowLink(row)
+    if (link) router.push(link)
+  }
+}
+
 const alignClass = (align?: string) => {
   if (align === 'center') return 'text-center'
   if (align === 'right') return 'text-right'
@@ -157,6 +167,8 @@ const alignClass = (align?: string) => {
             v-for="(row, idx) in paginatedData"
             :key="idx"
             class="border-b border-(--border-default) last:border-b-0 hover:bg-(--interactive-hover) transition-colors"
+            :class="{ 'cursor-pointer': !!rowLink }"
+            @click="onRowClick(row)"
           >
             <td
               v-for="col in columns"

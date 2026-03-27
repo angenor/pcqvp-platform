@@ -13,6 +13,7 @@ from app.schemas.compte_administratif import (
     CompteDetail,
     CompteListItem,
     CompteListResponse,
+    CompteUpdate,
     DepenseLineResponse,
     DepenseLineUpsert,
     DepenseProgramCreate,
@@ -83,6 +84,31 @@ async def list_comptes(
             )
         )
     return CompteListResponse(items=result_items, total=total)
+
+
+@router.put("/{compte_id}", response_model=CompteDetail)
+async def update_compte(
+    compte_id: uuid.UUID,
+    data: CompteUpdate,
+    current_user: User = Depends(require_role("admin", "editor")),
+    db: AsyncSession = Depends(get_db),
+):
+    update_data = data.model_dump(exclude_none=True)
+    if not update_data:
+        raise HTTPException(status_code=422, detail="Aucun champ a modifier")
+    result = await compte_service.update_compte(
+        db, compte_id, update_data, current_user.id
+    )
+    if isinstance(result, str):
+        if "non trouvee" in result:
+            raise HTTPException(status_code=404, detail=result)
+        if "existe deja" in result:
+            raise HTTPException(status_code=409, detail=result)
+        raise HTTPException(status_code=422, detail=result)
+    name = await compte_service.get_collectivite_name(
+        db, result.collectivite_type.value, result.collectivite_id
+    )
+    return _compte_to_detail(result, name)
 
 
 @router.get("/{compte_id}", response_model=CompteDetail)

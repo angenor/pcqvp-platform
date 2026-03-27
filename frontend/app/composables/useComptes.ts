@@ -36,6 +36,13 @@ export function useComptes() {
     return apiFetch<CompteDetail>(`/api/admin/comptes/${id}`)
   }
 
+  function updateCompte(id: string, data: { collectivite_type?: string; collectivite_id?: string; annee_exercice?: number }) {
+    return apiFetch<CompteDetail>(`/api/admin/comptes/${id}`, {
+      method: 'PUT',
+      body: data,
+    })
+  }
+
   function upsertRecetteLine(compteId: string, data: RecetteLineUpsert) {
     return apiFetch<RecetteLineResponse>(`/api/admin/comptes/${compteId}/recettes`, {
       method: 'PUT',
@@ -97,6 +104,7 @@ export function useComptes() {
     createCompte,
     fetchComptes,
     fetchCompte,
+    updateCompte,
     upsertRecetteLine,
     createProgramme,
     updateProgramme,

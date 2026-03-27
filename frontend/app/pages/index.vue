@@ -72,8 +72,6 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
       <!-- Section Carte Interactive avec Statistiques -->
       <HomeMapSection />
 
-      <!-- Section Statistiques -->
-      <HomeStatsSection />
     </main>
   </div>
 </template>

@@ -12,6 +12,12 @@ class CompteCreate(BaseModel):
     annee_exercice: int = Field(ge=1900, le=2100)
 
 
+class CompteUpdate(BaseModel):
+    collectivite_type: str | None = Field(default=None, pattern="^(province|region|commune)$")
+    collectivite_id: uuid.UUID | None = None
+    annee_exercice: int | None = Field(default=None, ge=1900, le=2100)
+
+
 class CompteListItem(BaseModel):
     id: uuid.UUID
     collectivite_type: str

@@ -7,8 +7,11 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { fetchComptes } = useComptes()
+const { fetchComptes, updateStatus } = useComptes()
 const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail } = useGeography()
+const { user } = useAuth()
+
+const isAdmin = computed(() => user.value?.role === 'admin')
 
 const items = ref<CompteListItem[]>([])
 const total = ref(0)
@@ -126,6 +129,16 @@ async function loadData() {
   }
 }
 
+async function toggleStatus(row: CompteListItem) {
+  const newStatus = row.status === 'published' ? 'draft' : 'published'
+  try {
+    await updateStatus(row.id, { status: newStatus })
+    await loadData()
+  } catch {
+    // ignore
+  }
+}
+
 function formatDate(d: string | null): string {
   if (!d) return '-'
   return new Date(d).toLocaleDateString('fr-FR')
@@ -161,7 +174,16 @@ function formatDate(d: string | null): string {
       :searchable="false"
       empty-message="Aucun compte trouve"
       :empty-icon="['fas', 'calculator']"
+      :row-link="(row: any) => `/admin/accounts/${row.id}`"
     >
+      <template #cell-collectivite_name="{ row, value }">
+        <NuxtLink
+          :to="`/admin/accounts/${row.id}`"
+          class="font-medium text-(--color-primary) hover:underline"
+        >
+          {{ value }}
+        </NuxtLink>
+      </template>
       <template #cell-collectivite_type="{ value }">
         <UiBadge variant="gray">{{ value }}</UiBadge>
       </template>
@@ -178,9 +200,19 @@ function formatDate(d: string | null): string {
       </template>
       <template #actions="{ row }">
         <div class="flex items-center justify-end gap-1">
+          <UiButton variant="ghost" size="sm" :to="`/admin/accounts/${row.id}`" :icon="['fas', 'eye']">
+            Voir
+          </UiButton>
           <UiButton variant="ghost" size="sm" :to="`/admin/accounts/${row.id}/recettes`">Recettes</UiButton>
           <UiButton variant="ghost" size="sm" :to="`/admin/accounts/${row.id}/depenses`">Depenses</UiButton>
-          <UiButton variant="ghost" size="sm" :to="`/admin/accounts/${row.id}/recap`">Recap</UiButton>
+          <button
+            v-if="isAdmin"
+            class="text-xs px-2 py-1 rounded border border-(--border-default) text-(--text-secondary) hover:bg-(--interactive-hover) transition-colors"
+            :title="row.status === 'published' ? 'Repasser en brouillon' : 'Publier'"
+            @click="toggleStatus(row)"
+          >
+            {{ row.status === 'published' ? 'Depublier' : 'Publier' }}
+          </button>
         </div>
       </template>
     </UiDataTable>
