@@ -20,33 +20,30 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let root: any = null
 let polygonSeries: any = null
 
-// Mapping des IDs amCharts vers les noms de régions
+// Mapping des IDs amCharts geodata vers les noms de régions en base
 const amchartsToRegionName: Record<string, string> = {
   'MG-TIT': 'Itasy',
-  'MG-TAT': 'Analamanga',
+  'MG-TAG': 'Analamanga',
   'MG-TVA': 'Vakinankaratra',
   'MG-TBO': 'Bongolava',
   'MG-FAM': "Amoron'i Mania",
   'MG-FHM': 'Haute Matsiatra',
   'MG-FVF': 'Vatovavy-Fitovinany',
-  'MG-FVH': 'Vatovavy',
-  'MG-FFT': 'Fitovinany',
   'MG-FHO': 'Ihorombe',
-  'MG-FAT': 'Atsimo-Atsinanana',
-  'MG-MAL': 'Alaotra-Mangoro',
+  'MG-FAA': 'Atsimo-Atsinanana',
   'MG-AAO': 'Alaotra-Mangoro',
-  'MG-MAT': 'Atsinanana',
-  'MG-MAA': 'Analanjirofo',
+  'MG-AAI': 'Atsinanana',
+  'MG-AAN': 'Analanjirofo',
   'MG-MSF': 'Sofia',
   'MG-MBO': 'Boeny',
-  'MG-MBT': 'Betsiboka',
+  'MG-MBE': 'Betsiboka',
   'MG-MME': 'Melaky',
-  'MG-AAM': 'Atsimo-Andrefana',
-  'MG-TAD': 'Androy',
-  'MG-TAN': 'Anosy',
-  'MG-MAM': 'Menabe',
-  'MG-DSN': 'Diana',
-  'MG-DSV': 'Sava',
+  'MG-UAF': 'Atsimo-Andrefana',
+  'MG-UAD': 'Androy',
+  'MG-UAY': 'Anosy',
+  'MG-UME': 'Menabe',
+  'MG-DDI': 'Diana',
+  'MG-DSF': 'Sava',
 }
 
 const findRegionByName = (name: string): RegionListItem | undefined => {
@@ -145,11 +142,13 @@ const initChart = async () => {
     return '{name}'
   })
 
-  updateColors()
+  polygonSeries.events.on('datavalidated', () => {
+    applyColors()
+  })
 }
 
-const updateColors = () => {
-  if (!polygonSeries) return
+const applyColors = () => {
+  if (!polygonSeries || !$am5) return
   polygonSeries.mapPolygons.each((polygon: any) => {
     const dataItem = polygon.dataItem
     if (dataItem) {
@@ -161,7 +160,9 @@ const updateColors = () => {
   })
 }
 
-watch(() => props.regions, () => updateColors(), { deep: true })
+watch(() => props.regions, () => {
+  nextTick(() => applyColors())
+}, { deep: true })
 
 watch(isDark, () => {
   if (polygonSeries) {
@@ -171,7 +172,7 @@ watch(isDark, () => {
     polygonSeries.mapPolygons.template.states.create('hover', {
       fill: $am5.core.color(isDark.value ? '#4f46e5' : '#818cf8'),
     })
-    updateColors()
+    applyColors()
   }
 })
 

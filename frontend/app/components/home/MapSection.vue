@@ -2,12 +2,14 @@
 import type { RegionListItem, CommuneListItem } from '~/types/geography'
 
 const { fetchRegions } = useGeography()
+const { fetchAnnees } = usePublicComptes()
 
 const regions = ref<RegionListItem[]>([])
 const isLoading = ref(true)
 const hoveredRegion = ref<RegionListItem | null>(null)
 const selectedRegion = ref<RegionListItem | null>(null)
 const selectedCommune = ref<CommuneListItem | null>(null)
+const selectedRegionHasCompte = ref(false)
 
 // Modal communes
 const showCommunesModal = ref(false)
@@ -22,11 +24,19 @@ onMounted(async () => {
   }
 })
 
-const handleRegionClick = (region: RegionListItem | null) => {
+const handleRegionClick = async (region: RegionListItem | null) => {
   if (region) {
     selectedRegion.value = region
     selectedCommune.value = null
+    selectedRegionHasCompte.value = false
     showCommunesModal.value = true
+    // Vérifier si la région a un compte direct
+    try {
+      const annees = await fetchAnnees('region', region.id)
+      selectedRegionHasCompte.value = annees.length > 0
+    } catch {
+      selectedRegionHasCompte.value = false
+    }
   }
 }
 
@@ -37,6 +47,12 @@ const handleRegionHover = (region: RegionListItem | null) => {
 const handleCommuneSelect = (commune: CommuneListItem) => {
   showCommunesModal.value = false
   selectedCommune.value = commune
+}
+
+const navigateToRegion = () => {
+  if (selectedRegion.value) {
+    navigateTo(`/collectivite/region-${selectedRegion.value.id}`)
+  }
 }
 
 const navigateToCommune = () => {
@@ -186,7 +202,9 @@ const clearSelection = () => {
     <HomeCommunesModal
       v-model:show="showCommunesModal"
       :region="selectedRegion"
+      :region-has-compte="selectedRegionHasCompte"
       @select-commune="handleCommuneSelect"
+      @go-to-region="navigateToRegion"
     />
   </section>
 </template>

@@ -4,11 +4,13 @@ import type { RegionListItem, CommuneListItem } from '~/types/geography'
 const props = defineProps<{
   show: boolean
   region: RegionListItem | null
+  regionHasCompte?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
   'select-commune': [commune: CommuneListItem]
+  'go-to-region': []
 }>()
 
 const { fetchCommunes } = useGeography()
@@ -34,7 +36,7 @@ const loadCommunes = async (regionId: string) => {
   isLoading.value = true
   communes.value = []
   try {
-    communes.value = await fetchCommunes(regionId)
+    communes.value = await fetchCommunes(regionId, { hasComptes: true })
   } catch (err) {
     console.error('Erreur lors du chargement des communes:', err)
   } finally {
@@ -85,7 +87,7 @@ const selectCommune = (commune: CommuneListItem) => {
                   {{ region?.name || 'Région' }}
                 </h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Sélectionnez une commune
+                  {{ regionHasCompte && communes.length ? 'Compte régional et communes disponibles' : regionHasCompte ? 'Compte régional disponible' : 'Sélectionnez une commune' }}
                 </p>
               </div>
               <button
@@ -114,14 +116,43 @@ const selectCommune = (commune: CommuneListItem) => {
 
           <!-- Liste des communes -->
           <div class="p-4 overflow-y-auto max-h-[55vh]">
+            <!-- Bouton compte régional -->
+            <div v-if="regionHasCompte && !isLoading" class="mb-4">
+              <button
+                @click="emit('go-to-region'); close()"
+                class="w-full flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 cursor-pointer transition group"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center bg-blue-600 dark:bg-blue-500">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div class="text-left">
+                    <p class="font-semibold text-sm text-blue-900 dark:text-blue-100">Compte de la région</p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400">Voir le compte administratif régional</p>
+                  </div>
+                </div>
+                <svg class="w-4 h-4 text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <div v-if="communes.length" class="mt-3 mb-1 flex items-center gap-2">
+                <div class="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
+                <span class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Communes</span>
+                <div class="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
+              </div>
+            </div>
+
             <!-- Loading -->
             <div v-if="isLoading" class="flex flex-col items-center gap-3 py-8">
               <UiLoadingSpinner />
-              <span class="text-sm text-gray-500 dark:text-gray-400">Chargement des communes...</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">Chargement...</span>
             </div>
 
             <!-- Aucun résultat -->
-            <div v-else-if="filteredCommunes.length === 0" class="text-center py-8">
+            <div v-else-if="filteredCommunes.length === 0 && !regionHasCompte" class="text-center py-8">
               <svg class="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
