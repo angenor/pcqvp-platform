@@ -27,8 +27,11 @@ router = APIRouter(prefix="/api", tags=["geography"])
 
 
 @router.get("/provinces", response_model=list[ProvinceList])
-async def get_provinces(db: AsyncSession = Depends(get_db)):
-    provinces, _ = await list_provinces(db)
+async def get_provinces(
+    has_comptes: bool = False,
+    db: AsyncSession = Depends(get_db),
+):
+    provinces, _ = await list_provinces(db, has_comptes=has_comptes)
     return provinces
 
 
@@ -43,9 +46,12 @@ async def get_province(province_id: uuid.UUID, db: AsyncSession = Depends(get_db
 @router.get("/regions", response_model=list[RegionList])
 async def get_regions(
     province_id: uuid.UUID | None = None,
+    has_comptes: bool = False,
     db: AsyncSession = Depends(get_db),
 ):
-    regions, _ = await list_regions(db, province_id=province_id)
+    regions, _ = await list_regions(
+        db, province_id=province_id, has_comptes=has_comptes
+    )
     return regions
 
 
@@ -60,9 +66,10 @@ async def get_region(region_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 @router.get("/communes", response_model=list[CommuneList])
 async def get_communes(
     region_id: uuid.UUID | None = None,
+    has_comptes: bool = False,
     db: AsyncSession = Depends(get_db),
 ):
-    communes, _ = await list_communes(db, region_id=region_id)
+    communes, _ = await list_communes(db, region_id=region_id, has_comptes=has_comptes)
     return communes
 
 

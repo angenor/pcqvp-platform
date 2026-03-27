@@ -1,9 +1,10 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.compte_administratif import CompteAdministratif, CompteStatus
 from app.models.geography import Commune, Province, Region
 
 # --- Province ---
@@ -35,9 +36,28 @@ async def list_provinces(
     search: str | None = None,
     skip: int = 0,
     limit: int | None = None,
+    has_comptes: bool = False,
 ) -> tuple[list[Province], int]:
     query = select(Province).order_by(Province.name)
     count_query = select(func.count()).select_from(Province)
+
+    if has_comptes:
+        province_ids_with_comptes = (
+            select(Province.id)
+            .join(Region, Region.province_id == Province.id)
+            .join(Commune, Commune.region_id == Region.id)
+            .join(
+                CompteAdministratif,
+                and_(
+                    CompteAdministratif.collectivite_type == "commune",
+                    CompteAdministratif.collectivite_id == Commune.id,
+                    CompteAdministratif.status == CompteStatus.published,
+                ),
+            )
+            .distinct()
+        )
+        query = query.where(Province.id.in_(province_ids_with_comptes))
+        count_query = count_query.where(Province.id.in_(province_ids_with_comptes))
 
     if search:
         query = query.where(Province.name.ilike(f"%{search}%"))
@@ -122,9 +142,27 @@ async def list_regions(
     search: str | None = None,
     skip: int = 0,
     limit: int | None = None,
+    has_comptes: bool = False,
 ) -> tuple[list[Region], int]:
     query = select(Region).order_by(Region.name)
     count_query = select(func.count()).select_from(Region)
+
+    if has_comptes:
+        region_ids_with_comptes = (
+            select(Region.id)
+            .join(Commune, Commune.region_id == Region.id)
+            .join(
+                CompteAdministratif,
+                and_(
+                    CompteAdministratif.collectivite_type == "commune",
+                    CompteAdministratif.collectivite_id == Commune.id,
+                    CompteAdministratif.status == CompteStatus.published,
+                ),
+            )
+            .distinct()
+        )
+        query = query.where(Region.id.in_(region_ids_with_comptes))
+        count_query = count_query.where(Region.id.in_(region_ids_with_comptes))
 
     if province_id:
         query = query.where(Region.province_id == province_id)
@@ -208,9 +246,22 @@ async def list_communes(
     search: str | None = None,
     skip: int = 0,
     limit: int | None = None,
+    has_comptes: bool = False,
 ) -> tuple[list[Commune], int]:
     query = select(Commune).order_by(Commune.name)
     count_query = select(func.count()).select_from(Commune)
+
+    if has_comptes:
+        commune_ids_with_comptes = (
+            select(CompteAdministratif.collectivite_id)
+            .where(
+                CompteAdministratif.collectivite_type == "commune",
+                CompteAdministratif.status == CompteStatus.published,
+            )
+            .distinct()
+        )
+        query = query.where(Commune.id.in_(commune_ids_with_comptes))
+        count_query = count_query.where(Commune.id.in_(commune_ids_with_comptes))
 
     if region_id:
         query = query.where(Commune.region_id == region_id)

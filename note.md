@@ -1,5 +1,6 @@
 - pas besoins d'envoyer un email de confirmation quand on s'inscrit à une newletter(à reflechire)
 
+`agent-browser --headed`
 
 voici ce que je veux pour le backoffice:
 # sur la page des provinces Admin: 

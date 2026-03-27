@@ -15,26 +15,33 @@ export function useGeography() {
 
   // --- Public endpoints ---
 
-  function fetchProvinces() {
-    return apiFetch<ProvinceListItem[]>('/api/provinces')
+  function fetchProvinces(options?: { hasComptes?: boolean }) {
+    const params = options?.hasComptes ? '?has_comptes=true' : ''
+    return apiFetch<ProvinceListItem[]>(`/api/provinces${params}`)
   }
 
   function fetchProvinceDetail(id: string) {
     return apiFetch<ProvinceDetail>(`/api/provinces/${id}`)
   }
 
-  function fetchRegions(provinceId?: string) {
-    const params = provinceId ? `?province_id=${provinceId}` : ''
-    return apiFetch<RegionListItem[]>(`/api/regions${params}`)
+  function fetchRegions(provinceId?: string, options?: { hasComptes?: boolean }) {
+    const query = new URLSearchParams()
+    if (provinceId) query.set('province_id', provinceId)
+    if (options?.hasComptes) query.set('has_comptes', 'true')
+    const qs = query.toString()
+    return apiFetch<RegionListItem[]>(`/api/regions${qs ? '?' + qs : ''}`)
   }
 
   function fetchRegionDetail(id: string) {
     return apiFetch<RegionDetail>(`/api/regions/${id}`)
   }
 
-  function fetchCommunes(regionId?: string) {
-    const params = regionId ? `?region_id=${regionId}` : ''
-    return apiFetch<CommuneListItem[]>(`/api/communes${params}`)
+  function fetchCommunes(regionId?: string, options?: { hasComptes?: boolean }) {
+    const query = new URLSearchParams()
+    if (regionId) query.set('region_id', regionId)
+    if (options?.hasComptes) query.set('has_comptes', 'true')
+    const qs = query.toString()
+    return apiFetch<CommuneListItem[]>(`/api/communes${qs ? '?' + qs : ''}`)
   }
 
   function fetchCommuneDetail(id: string) {
