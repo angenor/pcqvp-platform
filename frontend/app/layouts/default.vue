@@ -4,6 +4,12 @@ const colorMode = useColorMode()
 function toggleTheme() {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
+
+const logoSrc = computed(() => {
+  return colorMode.value === 'dark'
+    ? '/images/logos/logo_fond_noire_texte_blanc.jpeg'
+    : '/images/logos/logo_fond_noire_texte_bleu.jpeg'
+})
 </script>
 
 <template>
@@ -13,9 +19,13 @@ function toggleTheme() {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <!-- Logo -->
-          <NuxtLink to="/" class="flex items-center gap-2">
-            <span class="text-xl font-bold text-gray-900 dark:text-white">PCQVP</span>
-            <span class="hidden sm:inline text-sm text-gray-500 dark:text-gray-400">Madagascar</span>
+          <NuxtLink to="/" class="flex items-center">
+            <img
+              :src="logoSrc"
+              :key="logoSrc"
+              alt="PCQVP Madagascar"
+              class="h-10 w-auto object-contain transition-opacity duration-300"
+            />
           </NuxtLink>
 
           <!-- Search -->
