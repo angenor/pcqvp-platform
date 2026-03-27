@@ -69,46 +69,55 @@ const logoSrc = computed(() => {
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <footer class="bg-gray-800 dark:bg-gray-950 text-white mt-16 print:hidden transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- About -->
+          <!-- À propos -->
           <div>
-            <h3 class="text-sm font-semibold uppercase text-gray-900 dark:text-white mb-3">
-              PCQVP Madagascar
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Plateforme de transparence des industries extractives de Madagascar.
+            <h3 class="font-bold text-lg mb-3 text-white">À propos</h3>
+            <p class="text-gray-300 dark:text-gray-400 text-sm">
+              Projet "Minerais critiques : justice fiscale et redistribution de revenus"
+              mené par PCQVP Madagascar et TI Madagascar.
             </p>
           </div>
 
-          <!-- Links -->
+          <!-- Contact -->
           <div>
-            <h3 class="text-sm font-semibold uppercase text-gray-900 dark:text-white mb-3">
-              Liens
-            </h3>
-            <ul class="space-y-2">
-              <li>
-                <NuxtLink to="/signaler" class="inline-flex items-center gap-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white! px-4 py-2 rounded-lg transition-colors">
-                  <font-awesome-icon icon="bullhorn" class="w-4 h-4" />
-                  Signaler
-                </NuxtLink>
-              </li>
-            </ul>
+            <h3 class="font-bold text-lg mb-3 text-white">Contact</h3>
+            <p class="text-gray-300 dark:text-gray-400 text-sm">
+              Email: vramaherison@transparency.mg<br>
+              Transparency International - Initiative Madagascar
+            </p>
           </div>
 
-          <!-- Newsletter -->
+          <!-- Ressources -->
           <div>
-            <h3 class="text-sm font-semibold uppercase text-gray-900 dark:text-white mb-3">
-              Newsletter
-            </h3>
-            <NewsletterForm />
+            <h3 class="font-bold text-lg mb-3 text-white">Ressources</h3>
+            <p class="text-gray-300 dark:text-gray-400 text-sm">
+              Plateforme de suivi des revenus miniers<br>
+              Collectivités Territoriales de Madagascar
+            </p>
+            <div class="mt-3">
+              <NuxtLink to="/signaler" class="inline-flex items-center gap-2 text-sm font-medium text-red-400 hover:text-red-300 transition-colors">
+                <font-awesome-icon icon="bullhorn" class="w-4 h-4" />
+                Signaler un problème
+              </NuxtLink>
+            </div>
           </div>
         </div>
 
-        <div class="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            &copy; {{ new Date().getFullYear() }} PCQVP Madagascar. Tous droits reserves.
+        <div class="border-t border-gray-700 dark:border-gray-800 mt-8 pt-6 text-center text-gray-300 dark:text-gray-500 text-sm">
+          <p>&copy; {{ new Date().getFullYear() }} PCQVP Madagascar. Tous droits réservés.</p>
+          <p class="mt-3 text-gray-400 dark:text-gray-600">
+            Plateforme développée par
+            <a
+              href="https://www.linkedin.com/company/herhero-forchange/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-blue-400 hover:text-blue-300 dark:text-blue-500 dark:hover:text-blue-400 transition font-medium"
+            >
+              HerHero
+            </a>
           </p>
         </div>
       </div>
