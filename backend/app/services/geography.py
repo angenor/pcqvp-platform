@@ -305,6 +305,70 @@ async def delete_commune(db: AsyncSession, commune: Commune) -> None:
     await db.commit()
 
 
+# --- IDs with comptes ---
+
+
+async def get_ids_with_comptes(
+    db: AsyncSession,
+) -> dict[str, list[uuid.UUID]]:
+    """Return IDs of provinces, regions and communes that have comptes administratifs
+    (directly or via their children)."""
+
+    # Commune IDs with direct comptes
+    commune_result = await db.execute(
+        select(CompteAdministratif.collectivite_id)
+        .where(CompteAdministratif.collectivite_type == "commune")
+        .distinct()
+    )
+    commune_ids = list(commune_result.scalars().all())
+
+    # Region IDs: direct comptes OR has communes with comptes
+    region_direct = (
+        select(CompteAdministratif.collectivite_id)
+        .where(CompteAdministratif.collectivite_type == "region")
+        .distinct()
+    )
+    region_via_communes = (
+        select(Commune.region_id)
+        .where(Commune.id.in_(commune_ids))
+        .distinct()
+    ) if commune_ids else None
+
+    region_result = await db.execute(region_direct)
+    region_ids = set(region_result.scalars().all())
+
+    if region_via_communes is not None:
+        region_via_result = await db.execute(region_via_communes)
+        region_ids.update(region_via_result.scalars().all())
+
+    region_ids_list = list(region_ids)
+
+    # Province IDs: direct comptes OR has regions with comptes
+    province_direct = (
+        select(CompteAdministratif.collectivite_id)
+        .where(CompteAdministratif.collectivite_type == "province")
+        .distinct()
+    )
+    province_via_regions = (
+        select(Region.province_id)
+        .where(Region.id.in_(region_ids_list))
+        .distinct()
+    ) if region_ids_list else None
+
+    province_result = await db.execute(province_direct)
+    province_ids = set(province_result.scalars().all())
+
+    if province_via_regions is not None:
+        province_via_result = await db.execute(province_via_regions)
+        province_ids.update(province_via_result.scalars().all())
+
+    return {
+        "province_ids": list(province_ids),
+        "region_ids": region_ids_list,
+        "commune_ids": commune_ids,
+    }
+
+
 # --- Hierarchy ---
 
 

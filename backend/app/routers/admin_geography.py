@@ -29,6 +29,7 @@ from app.services.geography import (
     delete_province,
     delete_region,
     get_commune_by_id,
+    get_ids_with_comptes,
     get_province_by_id,
     get_region_by_id,
     list_communes,
@@ -40,6 +41,17 @@ from app.services.geography import (
 )
 
 router = APIRouter(prefix="/api/admin", tags=["admin-geography"])
+
+
+# --- IDs with comptes ---
+
+
+@router.get("/geography/ids-with-comptes")
+async def admin_ids_with_comptes(
+    current_user: User = Depends(require_role("admin", "editor")),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_ids_with_comptes(db)
 
 
 # --- Provinces ---

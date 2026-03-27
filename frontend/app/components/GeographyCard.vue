@@ -8,6 +8,7 @@ const props = defineProps<{
   type: 'province' | 'region' | 'commune'
   clickRoute?: string
   showFinancialLinks?: boolean
+  highlighted?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,17 +39,31 @@ function handleCardClick() {
 
 <template>
   <div
-    class="relative rounded-lg border border-(--border-default) p-4 transition-all"
-    :class="clickRoute ? 'cursor-pointer hover:border-(--border-focus) hover:shadow-md' : ''"
+    class="relative rounded-lg border p-4 transition-all"
+    :class="[
+      clickRoute ? 'cursor-pointer hover:border-(--border-focus) hover:shadow-md' : '',
+      highlighted
+        ? 'border-emerald-500/50 dark:border-emerald-400/40 ring-1 ring-emerald-500/20 dark:ring-emerald-400/15'
+        : 'border-(--border-default)',
+    ]"
     :style="{ backgroundColor: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }"
     @click="handleCardClick"
   >
     <!-- Header: name + menu -->
     <div class="flex items-start justify-between gap-2">
       <div class="min-w-0 flex-1">
-        <h3 class="text-base font-semibold text-(--text-primary)">
-          {{ name }}
-        </h3>
+        <div class="flex items-center gap-2">
+          <h3 class="text-base font-semibold text-(--text-primary)">
+            {{ name }}
+          </h3>
+          <span
+            v-if="highlighted"
+            class="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300"
+          >
+            <font-awesome-icon :icon="['fas', 'coins']" class="text-[9px]" />
+            Comptes
+          </span>
+        </div>
         <p class="text-sm text-(--text-muted) mt-0.5">{{ code }}</p>
       </div>
       <UiDropdownMenu :items="menuItems" position="right" />

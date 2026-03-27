@@ -52,6 +52,14 @@ export function useGeography() {
     return apiFetch<HierarchyProvince[]>('/api/geography/hierarchy')
   }
 
+  // --- IDs with comptes ---
+
+  function fetchIdsWithComptes() {
+    return apiFetch<{ province_ids: string[]; region_ids: string[]; commune_ids: string[] }>(
+      '/api/admin/geography/ids-with-comptes',
+    )
+  }
+
   // --- Admin CRUD ---
 
   function createProvince(data: { name: string; code: string; description_json?: EditorJSData | null }) {
@@ -140,6 +148,7 @@ export function useGeography() {
   }
 
   return {
+    fetchIdsWithComptes,
     fetchProvinces,
     fetchProvinceDetail,
     fetchRegions,

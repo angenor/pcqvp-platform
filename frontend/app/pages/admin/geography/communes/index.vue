@@ -6,7 +6,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { fetchCommunes, fetchRegions, fetchProvinces, deleteCommune } = useGeography()
+const { fetchCommunes, fetchRegions, fetchProvinces, fetchIdsWithComptes, deleteCommune } = useGeography()
 
 const search = ref('')
 const selectedProvinceId = ref('')
@@ -14,14 +14,22 @@ const selectedRegionId = ref('')
 const provinces = ref<ProvinceListItem[]>([])
 const regions = ref<RegionListItem[]>([])
 const items = ref<CommuneListItem[]>([])
+const idsWithComptes = ref<Set<string>>(new Set())
 const loading = ref(true)
 const deleteError = ref('')
 const deletingId = ref<string | null>(null)
 
 const filteredItems = computed(() => {
-  if (!search.value) return items.value
-  const q = search.value.toLowerCase()
-  return items.value.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q))
+  let list = items.value
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    list = list.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q))
+  }
+  return [...list].sort((a, b) => {
+    const aHas = idsWithComptes.value.has(a.id) ? 0 : 1
+    const bHas = idsWithComptes.value.has(b.id) ? 0 : 1
+    return aHas - bHas || a.name.localeCompare(b.name)
+  })
 })
 
 const provinceOptions = computed(() => [
@@ -45,7 +53,12 @@ async function loadCommunes() {
 
 onMounted(async () => {
   try {
-    provinces.value = await fetchProvinces()
+    const [provincesData, ids] = await Promise.all([
+      fetchProvinces(),
+      fetchIdsWithComptes(),
+    ])
+    provinces.value = provincesData
+    idsWithComptes.value = new Set(ids.commune_ids)
   } catch {
     provinces.value = []
   }
@@ -134,6 +147,7 @@ async function confirmDelete() {
         :name="item.name"
         :code="item.code"
         type="commune"
+        :highlighted="idsWithComptes.has(item.id)"
         @edit="handleEdit(item.id)"
         @delete="handleDelete(item.id)"
       />
