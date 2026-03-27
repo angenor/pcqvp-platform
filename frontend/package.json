@@ -10,6 +10,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@amcharts/amcharts5": "^5.16.2",
+    "@amcharts/amcharts5-geodata": "^5.1.5",
     "@editorjs/checklist": "^1.6.0",
     "@editorjs/delimiter": "^1.4.2",
     "@editorjs/editorjs": "^2.31.5",

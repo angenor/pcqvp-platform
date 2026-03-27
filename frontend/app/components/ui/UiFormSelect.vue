@@ -3,6 +3,7 @@ const props = defineProps<{
   modelValue?: string | number
   options: { value: string | number; label: string }[]
   label?: string
+  icon?: string
   placeholder?: string
   required?: boolean
   error?: string
@@ -23,6 +24,7 @@ const selectId = computed(() => `select-${Math.random().toString(36).slice(2, 9)
       :for="selectId"
       class="block text-sm font-medium mb-1 text-(--text-secondary)"
     >
+      <font-awesome-icon v-if="icon" :icon="icon" class="mr-1.5 text-(--color-primary)" />
       {{ label }}
       <span v-if="required" class="text-(--color-error)">*</span>
     </label>

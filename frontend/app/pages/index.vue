@@ -43,34 +43,14 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
               <p class="text-base sm:text-lg text-blue-50 leading-relaxed drop-shadow-md">
                 Publiez Ce Que Vous Payez - Madagascar
               </p>
-              <!-- Badges valeurs -->
-              <div class="flex flex-wrap justify-center gap-4 mt-6">
-                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                  <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="text-sm text-white font-medium">Transparence</span>
-                </div>
-                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                  <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="text-sm text-white font-medium">Redevabilité</span>
-                </div>
-                <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                  <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="text-sm text-white font-medium">Accessibilité</span>
-                </div>
-              </div>
             </div>
           </div>
 
           <!-- Formulaire de sélection -->
           <div class="max-w-3xl mx-auto animate-fade-in-up">
             <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 transition-colors duration-200">
-              <h3 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+              <h3 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center flex items-center justify-center gap-3">
+                <font-awesome-icon icon="magnifying-glass" class="text-blue-600 dark:text-blue-400" />
                 Sélectionnez une collectivité
               </h3>
               <GeographySelector :on-submit="handleGeoSubmit" />

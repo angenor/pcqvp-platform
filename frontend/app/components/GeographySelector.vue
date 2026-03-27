@@ -114,6 +114,7 @@ function handleSubmit() {
         <UiFormSelect
           v-model="selectedProvinceId"
           label="Province"
+          icon="map-marked"
           :options="provinceOptions"
           placeholder="-- Choisir une province --"
           required
@@ -122,6 +123,7 @@ function handleSubmit() {
         <UiFormSelect
           v-model="selectedRegionId"
           label="Region"
+          icon="map"
           :options="regionOptions"
           :placeholder="regions.length === 0 ? 'Aucune region disponible' : '-- Choisir une region --'"
           :disabled="regions.length === 0"
@@ -131,6 +133,7 @@ function handleSubmit() {
         <UiFormSelect
           v-model="selectedCommuneId"
           label="Commune"
+          icon="city"
           :options="communeOptions"
           :placeholder="communes.length === 0 ? 'Aucune commune disponible' : '-- Optionnel --'"
           :disabled="communes.length === 0"
@@ -140,6 +143,7 @@ function handleSubmit() {
           v-if="showYears"
           v-model="selectedYear"
           label="Annee"
+          icon="calendar"
           :options="yearOptions"
           :placeholder="props.years.length === 0 ? 'Aucune annee disponible' : '-- Choisir une annee --'"
           :disabled="props.years.length === 0"
@@ -147,9 +151,10 @@ function handleSubmit() {
         />
       </div>
 
-      <div class="mt-6 flex justify-end">
+      <div class="mt-6 flex justify-center">
         <UiButton :disabled="!canSubmit" @click="handleSubmit">
-          OK
+          <font-awesome-icon icon="magnifying-glass" class="mr-2" />
+          Rechercher
         </UiButton>
       </div>
     </div>
