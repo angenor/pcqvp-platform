@@ -14,7 +14,7 @@ const showCommunesModal = ref(false)
 
 onMounted(async () => {
   try {
-    regions.value = await fetchRegions()
+    regions.value = await fetchRegions(undefined, { hasComptes: true })
   } catch (err) {
     console.error('Erreur lors du chargement des régions:', err)
   } finally {
@@ -150,7 +150,7 @@ const clearSelection = () => {
 
             <!-- Vue par défaut : liste des régions -->
             <div v-else key="list" class="notebook-content">
-              <h3 class="notebook-title">Régions de Madagascar</h3>
+              <h3 class="notebook-title">Régions avec comptes</h3>
 
               <!-- Loading skeleton -->
               <template v-if="isLoading">

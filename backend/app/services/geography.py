@@ -148,7 +148,8 @@ async def list_regions(
     count_query = select(func.count()).select_from(Region)
 
     if has_comptes:
-        region_ids_with_comptes = (
+        # Régions ayant au moins une commune avec un compte publié
+        region_ids_via_communes = (
             select(Region.id)
             .join(Commune, Commune.region_id == Region.id)
             .join(
@@ -161,8 +162,20 @@ async def list_regions(
             )
             .distinct()
         )
-        query = query.where(Region.id.in_(region_ids_with_comptes))
-        count_query = count_query.where(Region.id.in_(region_ids_with_comptes))
+        # Régions ayant un compte direct publié
+        region_ids_direct = (
+            select(CompteAdministratif.collectivite_id)
+            .where(
+                CompteAdministratif.collectivite_type == "region",
+                CompteAdministratif.status == CompteStatus.published,
+            )
+            .distinct()
+        )
+        has_comptes_filter = Region.id.in_(region_ids_via_communes) | Region.id.in_(
+            region_ids_direct
+        )
+        query = query.where(has_comptes_filter)
+        count_query = count_query.where(has_comptes_filter)
 
     if province_id:
         query = query.where(Region.province_id == province_id)
