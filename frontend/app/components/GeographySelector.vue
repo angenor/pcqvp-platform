@@ -54,7 +54,7 @@ watch(selectedRegionId, async (id) => {
 const showYears = computed(() => props.years.length > 0)
 
 const canSubmit = computed(() => {
-  if (!selectedProvinceId.value || !selectedRegionId.value) return false
+  if (!selectedProvinceId.value || !selectedRegionId.value || !selectedCommuneId.value) return false
   if (showYears.value && !selectedYear.value) return false
   return true
 })
@@ -110,7 +110,7 @@ function handleSubmit() {
     </div>
 
     <div v-else>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <UiFormSelect
           v-model="selectedProvinceId"
           label="Province"

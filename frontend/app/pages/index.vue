@@ -87,12 +87,14 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
       </div>
     </section>
 
-    <!-- Section info en dessous du hero -->
-    <div class="max-w-4xl mx-auto px-4 py-12">
-      <div class="text-center text-sm text-gray-500 dark:text-gray-400">
-        <p>Consultez les comptes administratifs publiés des collectivités territoriales malgaches.</p>
-      </div>
-    </div>
+    <!-- Contenu principal sous le hero -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <!-- Section Statistiques -->
+      <HomeStatsSection />
+
+      <!-- Section Cartes informatives -->
+      <HomeInfoCards />
+    </main>
   </div>
 </template>
 
