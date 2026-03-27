@@ -22,6 +22,7 @@ const success = ref('')
 
 // Edit mode
 const editing = ref(false)
+const initializing = ref(false)
 const collectiviteType = ref<'province' | 'region' | 'commune'>('commune')
 const provinces = ref<ProvinceListItem[]>([])
 const regions = ref<RegionListItem[]>([])
@@ -75,7 +76,7 @@ onMounted(async () => {
 })
 
 watch(selectedProvinceId, async (id) => {
-  if (!editing.value) return
+  if (!editing.value || initializing.value) return
   selectedRegionId.value = ''
   selectedCommuneId.value = ''
   regions.value = []
@@ -86,7 +87,7 @@ watch(selectedProvinceId, async (id) => {
 })
 
 watch(selectedRegionId, async (id) => {
-  if (!editing.value) return
+  if (!editing.value || initializing.value) return
   selectedCommuneId.value = ''
   communes.value = []
   if (id) {
@@ -96,6 +97,7 @@ watch(selectedRegionId, async (id) => {
 
 async function startEditing() {
   if (!compte.value) return
+  initializing.value = true
   editing.value = true
   error.value = ''
   success.value = ''
@@ -114,8 +116,6 @@ async function startEditing() {
       selectedRegionId.value = compte.value.collectivite_id
     }
   } else if (collectiviteType.value === 'commune') {
-    // For commune, we need to resolve the chain
-    // Load all regions for each province until we find the right commune
     const { apiFetch } = useApi()
     try {
       const communeDetail = await apiFetch<any>(`/api/geography/communes/${compte.value.collectivite_id}`)
@@ -133,6 +133,8 @@ async function startEditing() {
       // Fallback: just set the type
     }
   }
+
+  initializing.value = false
 }
 
 function cancelEditing() {
