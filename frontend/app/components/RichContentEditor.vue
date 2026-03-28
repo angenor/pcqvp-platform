@@ -119,7 +119,13 @@ let editor: EditorJS | null = null
 const getInitialData = (): OutputData | undefined => {
   if (!props.modelValue) return undefined
   if (typeof props.modelValue === 'object' && props.modelValue.blocks) {
-    return props.modelValue
+    return {
+      ...props.modelValue,
+      blocks: props.modelValue.blocks.map((block: any) => ({
+        ...block,
+        tunes: block.tunes ?? (block.type === 'image' ? { imagePosition: { position: 'center' } } : undefined),
+      })),
+    }
   }
   return undefined
 }
