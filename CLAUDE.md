@@ -106,6 +106,7 @@ Use multiple sub-agents in parallel for efficiency (10 max):
 ## Active Technologies
 - Python 3.12 (backend), TypeScript (frontend) + FastAPI, SQLAlchemy 2.0 async, Nuxt 4, Vue 3.5, Tailwind CSS 4 (014-region-admin-accounts)
 - PostgreSQL 16 via asyncpg (014-region-admin-accounts)
+- Python 3.12 (backend), TypeScript (frontend) + FastAPI, SQLAlchemy 2.0 async, Pydantic v2, Nuxt 4, Vue 3.5, EditorJS, Tailwind CSS 4 (015-backoffice-editorials)
 
 ## Recent Changes
 - 014-region-admin-accounts: Added Python 3.12 (backend), TypeScript (frontend) + FastAPI, SQLAlchemy 2.0 async, Nuxt 4, Vue 3.5, Tailwind CSS 4

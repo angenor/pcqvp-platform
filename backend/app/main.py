@@ -15,6 +15,7 @@ from app.middleware.visit_tracker import VisitTrackerMiddleware
 from app.routers.admin_analytics import router as admin_analytics_router
 from app.routers.admin_comptes import router as admin_comptes_router
 from app.routers.admin_config import router as admin_config_router
+from app.routers.admin_editorial import router as admin_editorial_router
 from app.routers.admin_geography import router as admin_geography_router
 from app.routers.admin_newsletter import router as admin_newsletter_router
 from app.routers.admin_templates import router as admin_templates_router
@@ -23,6 +24,7 @@ from app.routers.geography import router as geography_router
 from app.routers.newsletter import router as newsletter_router
 from app.routers.public_comptes import router as public_comptes_router
 from app.routers.public_config import router as public_config_router
+from app.routers.public_editorial import router as public_editorial_router
 from app.routers.search import router as search_router
 from app.routers.upload import router as upload_router
 from app.routers.users import router as users_router
@@ -56,7 +58,9 @@ app.include_router(newsletter_router)
 app.include_router(admin_newsletter_router)
 app.include_router(admin_analytics_router)
 app.include_router(admin_config_router)
+app.include_router(admin_editorial_router)
 app.include_router(public_config_router)
+app.include_router(public_editorial_router)
 app.include_router(upload_router)
 app.include_router(users_router)
 

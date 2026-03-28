@@ -1,9 +1,30 @@
 <script setup lang="ts">
+import type { EditorJSData } from '~/types/geography'
+
 useSeoMeta({
   title: 'Plateforme de suivi des revenus miniers - PCQVP Madagascar',
   description: 'Consultez les comptes administratifs publies des collectivites territoriales malgaches. Transparence des industries extractives.',
   ogTitle: 'Plateforme de suivi des revenus miniers - PCQVP Madagascar',
   ogDescription: 'Consultez les comptes administratifs publies des collectivites territoriales malgaches.',
+})
+
+const { fetchEditorial } = useEditorial()
+
+const heroTitle = ref('Plateforme de Suivi des Revenus Miniers')
+const heroSubtitle = ref('Collectivités Territoriales de Madagascar')
+const heroDescription = ref('Publiez Ce Que Vous Payez - Madagascar')
+const bodyContent = ref<EditorJSData | null>(null)
+
+onMounted(async () => {
+  try {
+    const data = await fetchEditorial()
+    if (data.hero.title) heroTitle.value = data.hero.title
+    if (data.hero.subtitle) heroSubtitle.value = data.hero.subtitle
+    if (data.hero.description) heroDescription.value = data.hero.description
+    bodyContent.value = data.body.content_json as EditorJSData | null
+  } catch {
+    // use default values
+  }
 })
 
 function handleGeoSubmit(selection: { type: string; id: string }) {
@@ -34,14 +55,14 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
           <!-- Titre principal -->
           <div class="text-center mb-8 lg:mb-12 animate-slide-up">
             <p class="uppercase text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-2xl">
-              Plateforme de Suivi des Revenus Miniers
+              {{ heroTitle }}
             </p>
             <p class="text-xl sm:text-2xl lg:text-3xl text-blue-100 font-light mb-6 drop-shadow-lg">
-              Collectivités Territoriales de Madagascar
+              {{ heroSubtitle }}
             </p>
             <div class="max-w-3xl mx-auto">
               <p class="text-base sm:text-lg text-blue-50 leading-relaxed drop-shadow-md">
-                Publiez Ce Que Vous Payez - Madagascar
+                {{ heroDescription }}
               </p>
             </div>
           </div>
@@ -69,6 +90,11 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
 
     <!-- Contenu principal sous le hero -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <!-- Section de présentation contextuelle (contenu éditorial) -->
+      <section v-if="bodyContent?.blocks?.length" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 transition-colors">
+        <RichContentRenderer :description-json="bodyContent" />
+      </section>
+
       <!-- Section Carte Interactive avec Statistiques -->
       <HomeMapSection />
 

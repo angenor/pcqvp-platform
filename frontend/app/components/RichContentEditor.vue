@@ -128,6 +128,8 @@ onMounted(async () => {
   if (!editorContainer.value) return
 
   const initialData = getInitialData()
+  const token = useState<string | null>('access_token').value
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
 
   editor = new EditorJS({
     holder: editorContainer.value,
@@ -261,6 +263,7 @@ onMounted(async () => {
             byFile: '/api/admin/upload/image',
             byUrl: '/api/admin/upload/image-by-url',
           },
+          additionalRequestHeaders: authHeaders,
           field: 'image',
           captionPlaceholder: 'Légende de l\'image',
           buttonContent: 'Sélectionner une image',

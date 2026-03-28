@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { EditorJSData } from '~/types/geography'
+import type { ResourceLink } from '~/types/editorial'
+
 const colorMode = useColorMode()
 
 function toggleTheme() {
@@ -9,6 +12,45 @@ const logoSrc = computed(() => {
   return colorMode.value === 'dark'
     ? '/images/logos/logo_fond_noire_texte_blanc.jpeg'
     : '/images/logos/logo_fond_noire_texte_bleu.jpeg'
+})
+
+// Footer editorial content
+const { fetchEditorial } = useEditorial()
+
+const footerAboutContent = ref<EditorJSData | null>(null)
+const footerAboutFallback = 'Projet "Minerais critiques : justice fiscale et redistribution de revenus" mené par PCQVP Madagascar et TI Madagascar.'
+const footerContactEmail = ref('vramaherison@transparency.mg')
+const footerContactText = ref('Transparency International - Initiative Madagascar')
+const footerContactPhone = ref('')
+const footerContactAddress = ref('')
+const footerResources = ref<ResourceLink[]>([])
+const hasAboutRichContent = ref(false)
+
+onMounted(async () => {
+  try {
+    const data = await fetchEditorial()
+
+    if (data.footer.about.content_json) {
+      const json = data.footer.about.content_json as EditorJSData
+      if (json.blocks?.length) {
+        footerAboutContent.value = json
+        hasAboutRichContent.value = true
+      }
+    }
+
+    if (data.footer.contact.email) footerContactEmail.value = data.footer.contact.email
+    if (data.footer.contact.phone) footerContactPhone.value = data.footer.contact.phone
+    if (data.footer.contact.address) {
+      footerContactAddress.value = data.footer.contact.address
+      footerContactText.value = data.footer.contact.address
+    }
+
+    if (data.footer.resources.length) {
+      footerResources.value = data.footer.resources
+    }
+  } catch {
+    // use default values
+  }
 })
 </script>
 
@@ -75,28 +117,56 @@ const logoSrc = computed(() => {
           <!-- À propos -->
           <div>
             <h3 class="font-bold text-lg mb-3 text-white!">À propos</h3>
-            <p class="text-gray-200 dark:text-gray-400 text-sm">
-              Projet "Minerais critiques : justice fiscale et redistribution de revenus"
-              mené par PCQVP Madagascar et TI Madagascar.
+            <div v-if="hasAboutRichContent" class="text-gray-200 dark:text-gray-400 text-sm footer-rich-content max-h-40 overflow-hidden">
+              <RichContentRenderer :description-json="footerAboutContent" />
+            </div>
+            <p v-else class="text-gray-200 dark:text-gray-400 text-sm">
+              {{ footerAboutFallback }}
             </p>
           </div>
 
           <!-- Contact -->
           <div>
             <h3 class="font-bold text-lg mb-3 text-white!">Contact</h3>
-            <p class="text-gray-200 dark:text-gray-400 text-sm">
-              Email: vramaherison@transparency.mg<br>
-              Transparency International - Initiative Madagascar
-            </p>
+            <div class="text-gray-200 dark:text-gray-400 text-sm space-y-1">
+              <p v-if="footerContactEmail">
+                Email: <a :href="`mailto:${footerContactEmail}`" class="text-blue-400 hover:text-blue-300 transition-colors">{{ footerContactEmail }}</a>
+              </p>
+              <p v-if="footerContactPhone">
+                Tél: {{ footerContactPhone }}
+              </p>
+              <p v-if="footerContactText && !footerContactAddress">
+                {{ footerContactText }}
+              </p>
+              <p v-if="footerContactAddress">
+                {{ footerContactAddress }}
+              </p>
+            </div>
           </div>
 
           <!-- Ressources -->
           <div>
             <h3 class="font-bold text-lg mb-3 text-white!">Ressources</h3>
-            <p class="text-gray-200 dark:text-gray-400 text-sm">
-              Plateforme de suivi des revenus miniers<br>
-              Collectivités Territoriales de Madagascar
-            </p>
+            <template v-if="footerResources.length">
+              <ul class="space-y-2">
+                <li v-for="resource in footerResources" :key="resource.id">
+                  <a
+                    :href="resource.url"
+                    :target="resource.url.startsWith('http') ? '_blank' : undefined"
+                    :rel="resource.url.startsWith('http') ? 'noopener noreferrer' : undefined"
+                    class="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    {{ resource.title }}
+                  </a>
+                </li>
+              </ul>
+            </template>
+            <template v-else>
+              <p class="text-gray-200 dark:text-gray-400 text-sm">
+                Plateforme de suivi des revenus miniers<br>
+                Collectivités Territoriales de Madagascar
+              </p>
+            </template>
             <div class="mt-3">
               <NuxtLink to="/signaler" class="inline-flex items-center gap-2 text-sm font-medium text-red-400 hover:text-red-300 transition-colors">
                 <font-awesome-icon icon="bullhorn" class="w-4 h-4" />
