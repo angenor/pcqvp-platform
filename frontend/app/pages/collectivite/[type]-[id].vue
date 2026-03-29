@@ -8,8 +8,10 @@ const collectiviteType = parts?.[1] || ''
 const collectiviteId = parts?.[2] || ''
 
 const { fetchAnnees, fetchDescription, fetchCompte, downloadExport } = usePublicComptes()
+const { fetchEditorial } = useEditorial()
 
 const description = ref<PublicDescriptionResponse | null>(null)
+const defaultHeroImage = ref<string | null>(null)
 const annees = ref<number[]>([])
 const selectedAnnee = ref<number | null>(null)
 const compteData = ref<PublicCompteResponse | null>(null)
@@ -30,12 +32,16 @@ onMounted(async () => {
   }
 
   try {
-    const [desc, years] = await Promise.all([
+    const [desc, years, editorial] = await Promise.all([
       fetchDescription(collectiviteType, collectiviteId),
       fetchAnnees(collectiviteType, collectiviteId),
+      fetchEditorial().catch(() => null),
     ])
     description.value = desc
     annees.value = years
+    if (editorial?.hero?.image) {
+      defaultHeroImage.value = editorial.hero.image
+    }
 
     if (years.length > 0) {
       selectedAnnee.value = years[0]
@@ -88,6 +94,8 @@ const typeLabel = computed(() => {
   return labels[collectiviteType] || collectiviteType
 })
 
+const heroImage = computed(() => description.value?.banner_image || defaultHeroImage.value)
+
 const hasDescription = computed(() => {
   const dj = description.value?.description_json
   if (!dj) return false
@@ -139,17 +147,17 @@ useSeoMeta({
 
     <!-- Content -->
     <div v-else>
-      <!-- Hero section (if banner image exists) -->
+      <!-- Hero section -->
       <CollectiviteHero
-        v-if="description?.banner_image"
-        :name="description.name"
+        v-if="heroImage"
+        :name="description!.name"
         :type="collectiviteType"
-        :banner-image="description.banner_image"
+        :banner-image="heroImage"
       />
 
       <main class="max-w-6xl mx-auto px-4 py-6">
-      <!-- Title (fallback when no banner image) -->
-      <div v-if="!description?.banner_image" class="mb-6">
+      <!-- Title (fallback when no hero image at all) -->
+      <div v-if="!heroImage" class="mb-6">
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ typeLabel }}</p>
         <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
           {{ description?.name }}
