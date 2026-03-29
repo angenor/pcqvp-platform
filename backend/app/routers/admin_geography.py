@@ -77,7 +77,9 @@ async def admin_create_province(
 ):
     try:
         desc = data.description_json.model_dump() if data.description_json else None
-        return await create_province(db, data.name, data.code, desc)
+        return await create_province(
+            db, data.name, data.code, desc, banner_image=data.banner_image
+        )
     except Exception as exc:
         if "unique" in str(exc).lower():
             raise HTTPException(
@@ -105,6 +107,7 @@ async def admin_update_province(
             data.name,
             data.code,
             desc,
+            banner_image=data.banner_image,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -161,6 +164,7 @@ async def admin_create_region(
             data.code,
             data.province_id,
             desc,
+            banner_image=data.banner_image,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -190,6 +194,7 @@ async def admin_update_region(
             data.code,
             data.province_id,
             desc,
+            banner_image=data.banner_image,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -246,6 +251,7 @@ async def admin_create_commune(
             data.code,
             data.region_id,
             desc,
+            banner_image=data.banner_image,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -275,6 +281,7 @@ async def admin_update_commune(
             data.code,
             data.region_id,
             desc,
+            banner_image=data.banner_image,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():

@@ -68,6 +68,7 @@ async def get_collectivite_description(
         "name": entity.name,
         "type": ctype,
         "description_json": entity.description_json or [],
+        "banner_image": entity.banner_image,
     }
 
 

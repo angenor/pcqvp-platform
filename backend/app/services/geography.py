@@ -11,9 +11,15 @@ from app.models.geography import Commune, Province, Region
 
 
 async def create_province(
-    db: AsyncSession, name: str, code: str, description_json: dict | None = None
+    db: AsyncSession,
+    name: str,
+    code: str,
+    description_json: dict | None = None,
+    banner_image: str | None = None,
 ) -> Province:
-    province = Province(name=name, code=code, description_json=description_json)
+    province = Province(
+        name=name, code=code, description_json=description_json, banner_image=banner_image
+    )
     db.add(province)
     await db.commit()
     await db.refresh(province)
@@ -81,11 +87,13 @@ async def update_province(
     name: str,
     code: str,
     description_json: dict | None = None,
+    banner_image: str | None = None,
 ) -> Province:
     province.name = name
     province.code = code
     if description_json is not None:
         province.description_json = description_json
+    province.banner_image = banner_image
     await db.commit()
     await db.refresh(province)
     return province
@@ -114,12 +122,14 @@ async def create_region(
     code: str,
     province_id: uuid.UUID,
     description_json: dict | None = None,
+    banner_image: str | None = None,
 ) -> Region:
     region = Region(
         name=name,
         code=code,
         province_id=province_id,
         description_json=description_json,
+        banner_image=banner_image,
     )
     db.add(region)
     await db.commit()
@@ -203,12 +213,14 @@ async def update_region(
     code: str,
     province_id: uuid.UUID,
     description_json: dict | None = None,
+    banner_image: str | None = None,
 ) -> Region:
     region.name = name
     region.code = code
     region.province_id = province_id
     if description_json is not None:
         region.description_json = description_json
+    region.banner_image = banner_image
     await db.commit()
     await db.refresh(region)
     return region
@@ -235,12 +247,14 @@ async def create_commune(
     code: str,
     region_id: uuid.UUID,
     description_json: dict | None = None,
+    banner_image: str | None = None,
 ) -> Commune:
     commune = Commune(
         name=name,
         code=code,
         region_id=region_id,
         description_json=description_json,
+        banner_image=banner_image,
     )
     db.add(commune)
     await db.commit()
@@ -302,12 +316,14 @@ async def update_commune(
     code: str,
     region_id: uuid.UUID,
     description_json: dict | None = None,
+    banner_image: str | None = None,
 ) -> Commune:
     commune.name = name
     commune.code = code
     commune.region_id = region_id
     if description_json is not None:
         commune.description_json = description_json
+    commune.banner_image = banner_image
     await db.commit()
     await db.refresh(commune)
     return commune

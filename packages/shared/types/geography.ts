@@ -20,6 +20,7 @@ export interface ProvinceListItem {
 
 export interface ProvinceDetail extends ProvinceListItem {
   description_json: EditorJSData | null
+  banner_image: string | null
   regions: RegionListItem[]
   updated_at: string | null
 }
@@ -34,6 +35,7 @@ export interface RegionListItem {
 
 export interface RegionDetail extends RegionListItem {
   description_json: EditorJSData | null
+  banner_image: string | null
   communes: CommuneListItem[]
   updated_at: string | null
 }
@@ -48,6 +50,7 @@ export interface CommuneListItem {
 
 export interface CommuneDetail extends CommuneListItem {
   description_json: EditorJSData | null
+  banner_image: string | null
   updated_at: string | null
 }
 

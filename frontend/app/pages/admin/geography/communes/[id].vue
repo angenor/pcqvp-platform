@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ImageVariants } from '~/types/api'
+
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
@@ -21,7 +23,56 @@ const form = ref({
   code: '',
   region_id: '',
   description_json: null as any,
+  banner_image: null as string | null,
 })
+
+const uploading = ref(false)
+const token = useState<string | null>('access_token')
+const bannerFile = ref<File | null>(null)
+const showImageEditor = ref(false)
+
+function handleFileSelect(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  bannerFile.value = file
+  showImageEditor.value = true
+}
+
+async function uploadBlob(blob: Blob, suffix: string): Promise<string | null> {
+  const formData = new FormData()
+  formData.append('image', blob, `banner${suffix}.${blob.type.split('/')[1] || 'jpg'}`)
+  const res = await $fetch<{ success: number; file: { url: string } }>('/api/admin/upload/image', {
+    method: 'POST',
+    body: formData,
+    headers: { Authorization: `Bearer ${token.value}` },
+  })
+  return res.success ? res.file.url : null
+}
+
+async function handleEditorSave(variants: ImageVariants) {
+  uploading.value = true
+  showImageEditor.value = false
+  try {
+    const [lowUrl, mediumUrl, originalUrl] = await Promise.all([
+      uploadBlob(variants.low, '-low'),
+      uploadBlob(variants.medium, '-medium'),
+      uploadBlob(variants.original, ''),
+    ])
+    if (originalUrl) {
+      form.value.banner_image = originalUrl
+    }
+  } catch {
+    error.value = "Erreur lors de l'upload de l'image"
+  } finally {
+    uploading.value = false
+    bannerFile.value = null
+  }
+}
+
+function handleEditorCancel() {
+  showImageEditor.value = false
+  bannerFile.value = null
+}
 
 const provinceOptions = computed(() =>
   provinces.value.map((p: any) => ({ value: p.id, label: p.name }))
@@ -60,7 +111,8 @@ onMounted(async () => {
         name: data.name,
         code: data.code,
         region_id: data.region_id,
-        description_json: data.description_json || [],
+        description_json: data.description_json || null,
+        banner_image: data.banner_image || null,
       }
       if (data.region_id) {
         const { fetchRegionDetail } = useGeography()
@@ -158,6 +210,36 @@ async function handleSubmit() {
             </template>
           </ClientOnly>
         </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1 text-(--text-secondary)">Image banniere</label>
+          <div v-if="form.banner_image" class="mb-3">
+            <img :src="form.banner_image" alt="Banniere" class="w-full h-40 object-cover rounded-lg border border-(--border-default)" />
+            <button type="button" class="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline" @click="form.banner_image = null">
+              Supprimer l'image
+            </button>
+          </div>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="block w-full text-sm text-(--text-secondary) file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-(--interactive-hover) file:text-(--text-primary) hover:file:bg-(--interactive-active)"
+            :disabled="uploading"
+            @change="handleFileSelect"
+          />
+          <p v-if="uploading" class="mt-1 text-sm text-(--text-muted)">Upload en cours...</p>
+        </div>
+
+        <UiModal v-model="showImageEditor" title="Editer l'image banniere" size="full" :closable="true" @close="handleEditorCancel">
+          <ClientOnly>
+            <ImageEditor
+              v-if="bannerFile"
+              :image-file="bannerFile"
+              :generate-variants="true"
+              @save="handleEditorSave"
+              @cancel="handleEditorCancel"
+            />
+          </ClientOnly>
+        </UiModal>
 
         <div class="flex items-center gap-4 pt-2">
           <UiButton type="submit" :loading="saving" :icon="['fas', 'floppy-disk']">

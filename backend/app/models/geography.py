@@ -19,6 +19,9 @@ class Province(UUIDBase):
     description_json: Mapped[list] = mapped_column(
         JSONB, default=list, server_default="[]"
     )
+    banner_image: Mapped[str | None] = mapped_column(
+        String(500), nullable=True, default=None
+    )
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
@@ -48,6 +51,9 @@ class Region(UUIDBase):
     )
     description_json: Mapped[list] = mapped_column(
         JSONB, default=list, server_default="[]"
+    )
+    banner_image: Mapped[str | None] = mapped_column(
+        String(500), nullable=True, default=None
     )
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
@@ -79,6 +85,9 @@ class Commune(UUIDBase):
     )
     description_json: Mapped[list] = mapped_column(
         JSONB, default=list, server_default="[]"
+    )
+    banner_image: Mapped[str | None] = mapped_column(
+        String(500), nullable=True, default=None
     )
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True

@@ -88,6 +88,14 @@ const typeLabel = computed(() => {
   return labels[collectiviteType] || collectiviteType
 })
 
+const hasDescription = computed(() => {
+  const dj = description.value?.description_json
+  if (!dj) return false
+  if (Array.isArray(dj)) return dj.length > 0
+  if (typeof dj === 'object' && 'blocks' in dj) return (dj as any).blocks?.length > 0
+  return false
+})
+
 const seoTitle = computed(() => {
   const name = description.value?.name || ''
   const annee = selectedAnnee.value || ''
@@ -130,18 +138,27 @@ useSeoMeta({
     </div>
 
     <!-- Content -->
-    <main v-else class="max-w-6xl mx-auto px-4 py-6">
-      <!-- Title and description -->
-      <div class="mb-6">
+    <div v-else>
+      <!-- Hero section (if banner image exists) -->
+      <CollectiviteHero
+        v-if="description?.banner_image"
+        :name="description.name"
+        :type="collectiviteType"
+        :banner-image="description.banner_image"
+      />
+
+      <main class="max-w-6xl mx-auto px-4 py-6">
+      <!-- Title (fallback when no banner image) -->
+      <div v-if="!description?.banner_image" class="mb-6">
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ typeLabel }}</p>
         <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
           {{ description?.name }}
         </h1>
+      </div>
 
-        <!-- Rich content description -->
-        <div v-if="description?.description_json?.length" class="mt-4">
-          <RichContentRenderer :description-json="description.description_json" />
-        </div>
+      <!-- Rich content description -->
+      <div v-if="hasDescription" class="mb-6">
+        <RichContentRenderer :description-json="description!.description_json" />
       </div>
 
       <!-- Year selector + action buttons -->
@@ -291,5 +308,6 @@ useSeoMeta({
         </div>
       </div>
     </main>
+    </div>
   </div>
 </template>
