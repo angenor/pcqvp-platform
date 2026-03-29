@@ -19,14 +19,16 @@ const typeLabels: Record<string, string> = {
       :alt="`Banniere de ${name}`"
       class="absolute inset-0 w-full h-full object-cover"
     />
-    <div class="absolute inset-0 bg-black/50 dark:bg-black/60" />
-    <div class="relative h-full flex flex-col items-center justify-center text-center px-4">
-      <p class="text-sm text-gray-200 dark:text-gray-300 mb-1">
-        {{ typeLabels[type] || type }}
-      </p>
-      <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-        {{ name }}
-      </h1>
+    <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-transparent" />
+    <div class="relative h-full flex flex-col items-end justify-center text-center px-4 pb-8">
+      <div class="w-full">
+        <p class="text-sm text-white/80 mb-1">
+          {{ typeLabels[type] || type }}
+        </p>
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white!">
+          {{ name }}
+        </h1>
+      </div>
     </div>
   </div>
 </template>
