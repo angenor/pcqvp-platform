@@ -161,7 +161,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-bold mb-6 text-(--text-primary)">
       {{ isNew ? 'Nouvelle commune' : 'Modifier la commune' }}
     </h1>
@@ -199,7 +199,7 @@ async function handleSubmit() {
           :disabled="!selectedProvinceId"
         />
 
-        <div>
+        <div @mousedown.stop @keydown.stop>
           <label class="block text-sm font-medium mb-1 text-(--text-secondary)">Description</label>
           <ClientOnly>
             <RichContentEditor v-model="form.description_json" />
