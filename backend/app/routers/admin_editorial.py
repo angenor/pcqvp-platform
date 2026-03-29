@@ -62,6 +62,7 @@ async def _build_admin_response(db: AsyncSession) -> EditorialAdminResponse:
             title=hero_field(hero_data["title"]),
             subtitle=hero_field(hero_data["subtitle"]),
             description=hero_field(hero_data["description"]),
+            image=hero_field(hero_data["image"]),
         ),
         body=BodyContentAdmin(
             content_json=body.content_json if body else None,
@@ -96,7 +97,7 @@ async def put_hero(
     current_user: User = Depends(require_role("admin", "editor")),
     db: AsyncSession = Depends(get_db),
 ):
-    await update_hero(db, body.title, body.subtitle, body.description, current_user.id)
+    await update_hero(db, body.title, body.subtitle, body.description, current_user.id, image=body.image)
     return {"message": "Hero section mise à jour"}
 
 

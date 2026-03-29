@@ -62,14 +62,14 @@ export function useGeography() {
 
   // --- Admin CRUD ---
 
-  function createProvince(data: { name: string; code: string; description_json?: EditorJSData | null }) {
+  function createProvince(data: { name: string; code: string; description_json?: EditorJSData | null; banner_image?: string | null }) {
     return apiFetch<ProvinceDetail>('/api/admin/provinces', {
       method: 'POST',
       body: data,
     })
   }
 
-  function updateProvince(id: string, data: { name: string; code: string; description_json?: EditorJSData | null }) {
+  function updateProvince(id: string, data: { name: string; code: string; description_json?: EditorJSData | null; banner_image?: string | null }) {
     return apiFetch<ProvinceDetail>(`/api/admin/provinces/${id}`, {
       method: 'PUT',
       body: data,
@@ -80,14 +80,14 @@ export function useGeography() {
     return apiFetch<void>(`/api/admin/provinces/${id}`, { method: 'DELETE' })
   }
 
-  function createRegion(data: { name: string; code: string; province_id: string; description_json?: EditorJSData | null }) {
+  function createRegion(data: { name: string; code: string; province_id: string; description_json?: EditorJSData | null; banner_image?: string | null }) {
     return apiFetch<RegionDetail>('/api/admin/regions', {
       method: 'POST',
       body: data,
     })
   }
 
-  function updateRegion(id: string, data: { name: string; code: string; province_id: string; description_json?: EditorJSData | null }) {
+  function updateRegion(id: string, data: { name: string; code: string; province_id: string; description_json?: EditorJSData | null; banner_image?: string | null }) {
     return apiFetch<RegionDetail>(`/api/admin/regions/${id}`, {
       method: 'PUT',
       body: data,
@@ -98,14 +98,14 @@ export function useGeography() {
     return apiFetch<void>(`/api/admin/regions/${id}`, { method: 'DELETE' })
   }
 
-  function createCommune(data: { name: string; code: string; region_id: string; description_json?: EditorJSData | null }) {
+  function createCommune(data: { name: string; code: string; region_id: string; description_json?: EditorJSData | null; banner_image?: string | null }) {
     return apiFetch<CommuneDetail>('/api/admin/communes', {
       method: 'POST',
       body: data,
     })
   }
 
-  function updateCommune(id: string, data: { name: string; code: string; region_id: string; description_json?: EditorJSData | null }) {
+  function updateCommune(id: string, data: { name: string; code: string; region_id: string; description_json?: EditorJSData | null; banner_image?: string | null }) {
     return apiFetch<CommuneDetail>(`/api/admin/communes/${id}`, {
       method: 'PUT',
       body: data,

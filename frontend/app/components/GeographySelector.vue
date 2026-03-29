@@ -54,7 +54,7 @@ watch(selectedRegionId, async (id) => {
 const showYears = computed(() => props.years.length > 0)
 
 const canSubmit = computed(() => {
-  if (!selectedProvinceId.value || !selectedRegionId.value || !selectedCommuneId.value) return false
+  if (!selectedProvinceId.value || !selectedRegionId.value) return false
   if (showYears.value && !selectedYear.value) return false
   return true
 })
@@ -75,8 +75,8 @@ const yearOptions = computed(() =>
 function handleSubmit() {
   if (!canSubmit.value) return
 
-  const type = selectedCommuneId.value ? 'commune' : 'region'
-  const id = selectedCommuneId.value || selectedRegionId.value
+  const type = selectedCommuneId.value ? 'commune' : selectedRegionId.value ? 'region' : 'province'
+  const id = selectedCommuneId.value || selectedRegionId.value || selectedProvinceId.value
 
   if (props.onSubmit) {
     props.onSubmit({

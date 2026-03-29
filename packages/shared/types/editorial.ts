@@ -6,6 +6,7 @@ export interface HeroContent {
   title: string
   subtitle: string
   description: string
+  image: string | null
 }
 
 export interface HeroFieldAdmin {
@@ -17,12 +18,14 @@ export interface HeroContentAdmin {
   title: HeroFieldAdmin
   subtitle: HeroFieldAdmin
   description: HeroFieldAdmin
+  image: HeroFieldAdmin
 }
 
 export interface HeroUpdate {
   title: string
   subtitle?: string
   description?: string
+  image?: string | null
 }
 
 // --- Body ---

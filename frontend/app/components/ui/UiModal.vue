@@ -3,7 +3,7 @@ const props = defineProps<{
   modelValue: boolean
   title?: string
   description?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
   closable?: boolean
   danger?: boolean
 }>()
@@ -17,6 +17,8 @@ const sizeClasses: Record<string, string> = {
   sm: 'max-w-sm',
   md: 'max-w-lg',
   lg: 'max-w-2xl',
+  xl: 'max-w-5xl',
+  full: 'max-w-[95vw]',
 }
 
 function close() {

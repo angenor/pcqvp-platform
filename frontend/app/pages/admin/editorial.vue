@@ -4,6 +4,7 @@ import type {
   EditorialAdminResponse,
   ResourceLinkAdmin,
 } from '~/types/editorial'
+import type { ImageVariants } from '~/types/api'
 
 definePageMeta({
   layout: 'admin',
@@ -29,8 +30,11 @@ const activeTab = ref<'hero' | 'body' | 'footer'>('hero')
 const heroTitle = ref('')
 const heroSubtitle = ref('')
 const heroDescription = ref('')
+const heroImage = ref<string | null>(null)
+const heroImageUploading = ref(false)
 const heroSaving = ref(false)
 const heroFeedback = ref('')
+const token = useState<string | null>('access_token')
 
 // --- Body state ---
 const bodyContent = ref<EditorJSData | null>(null)
@@ -68,6 +72,7 @@ async function loadData() {
     heroTitle.value = data.hero.title.value
     heroSubtitle.value = data.hero.subtitle.value
     heroDescription.value = data.hero.description.value
+    heroImage.value = data.hero.image.value || null
 
     bodyContent.value = data.body.content_json as EditorJSData | null
 
@@ -96,6 +101,7 @@ async function saveHero() {
       title: heroTitle.value,
       subtitle: heroSubtitle.value || undefined,
       description: heroDescription.value || undefined,
+      image: heroImage.value,
     })
     heroFeedback.value = 'Hero section mise à jour avec succès'
   } catch {
@@ -104,6 +110,52 @@ async function saveHero() {
     heroSaving.value = false
     setTimeout(() => { heroFeedback.value = '' }, 3000)
   }
+}
+
+const heroBannerFile = ref<File | null>(null)
+const showHeroImageEditor = ref(false)
+
+function handleHeroFileSelect(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  heroBannerFile.value = file
+  showHeroImageEditor.value = true
+}
+
+async function uploadBlob(blob: Blob, suffix: string): Promise<string | null> {
+  const formData = new FormData()
+  formData.append('image', blob, `hero${suffix}.${blob.type.split('/')[1] || 'jpg'}`)
+  const res = await $fetch<{ success: number; file: { url: string } }>('/api/admin/upload/image', {
+    method: 'POST',
+    body: formData,
+    headers: { Authorization: `Bearer ${token.value}` },
+  })
+  return res.success ? res.file.url : null
+}
+
+async function handleHeroEditorSave(variants: ImageVariants) {
+  heroImageUploading.value = true
+  showHeroImageEditor.value = false
+  try {
+    const [_lowUrl, _mediumUrl, originalUrl] = await Promise.all([
+      uploadBlob(variants.low, '-low'),
+      uploadBlob(variants.medium, '-medium'),
+      uploadBlob(variants.original, ''),
+    ])
+    if (originalUrl) {
+      heroImage.value = originalUrl
+    }
+  } catch {
+    heroFeedback.value = "Erreur lors de l'upload de l'image"
+  } finally {
+    heroImageUploading.value = false
+    heroBannerFile.value = null
+  }
+}
+
+function handleHeroEditorCancel() {
+  showHeroImageEditor.value = false
+  heroBannerFile.value = null
 }
 
 // --- Body actions ---
@@ -308,7 +360,37 @@ const tabs = [
               placeholder="Description"
             />
           </div>
+          <div>
+            <label class="block text-sm font-medium text-[var(--text-primary)] mb-1">Image d'arriere-plan</label>
+            <p class="text-xs text-[var(--text-secondary)] mb-2">Image affichee en fond du hero section sur la page d'accueil. Si aucune image n'est definie, l'image par defaut sera utilisee.</p>
+            <div v-if="heroImage" class="mb-3">
+              <img :src="heroImage" alt="Hero background" class="w-full h-40 object-cover rounded-lg border border-[var(--border-default)]" />
+              <button type="button" class="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline cursor-pointer" @click="heroImage = null">
+                Supprimer l'image (revenir a l'image par defaut)
+              </button>
+            </div>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="block w-full text-sm text-[var(--text-secondary)] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[var(--interactive-hover)] file:text-[var(--text-primary)] hover:file:bg-[var(--interactive-active)] file:cursor-pointer"
+              :disabled="heroImageUploading"
+              @change="handleHeroFileSelect"
+            />
+            <p v-if="heroImageUploading" class="mt-1 text-sm text-[var(--text-muted)]">Upload en cours...</p>
+          </div>
         </div>
+
+        <UiModal v-model="showHeroImageEditor" title="Editer l'image hero" size="full" :closable="true" @close="handleHeroEditorCancel">
+          <ClientOnly>
+            <ImageEditor
+              v-if="heroBannerFile"
+              :image-file="heroBannerFile"
+              :generate-variants="true"
+              @save="handleHeroEditorSave"
+              @cancel="handleHeroEditorCancel"
+            />
+          </ClientOnly>
+        </UiModal>
 
         <div class="flex items-center gap-3">
           <button

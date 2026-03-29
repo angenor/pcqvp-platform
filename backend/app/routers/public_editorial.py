@@ -38,6 +38,7 @@ async def get_editorial(db: AsyncSession = Depends(get_db)):
             title=hero_text(hero_data["title"]),
             subtitle=hero_text(hero_data["subtitle"]),
             description=hero_text(hero_data["description"]),
+            image=hero_text(hero_data["image"]) or None,
         ),
         body=BodyContentPublic(
             content_json=body.content_json if body else None,

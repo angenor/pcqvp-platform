@@ -10,7 +10,8 @@ class PublicAnneesResponse(BaseModel):
 class PublicDescriptionResponse(BaseModel):
     name: str
     type: str
-    description_json: list[dict] = []
+    description_json: list[dict] | dict | None = []
+    banner_image: str | None = None
 
 
 class PublicTemplateColumn(BaseModel):

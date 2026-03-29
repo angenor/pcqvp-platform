@@ -8,6 +8,7 @@ export interface PublicDescriptionResponse {
   name: string
   type: CollectiviteType
   description_json: { type: string; content?: string; url?: string; alt?: string }[]
+  banner_image: string | null
 }
 
 export interface PublicTemplateColumn {

@@ -12,6 +12,7 @@ class HeroUpdate(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     subtitle: str | None = Field(None, max_length=255)
     description: str | None = Field(None, max_length=500)
+    image: str | None = Field(None, max_length=500)
 
 
 class HeroFieldAdmin(BaseModel):
@@ -23,12 +24,14 @@ class HeroContentAdmin(BaseModel):
     title: HeroFieldAdmin
     subtitle: HeroFieldAdmin
     description: HeroFieldAdmin
+    image: HeroFieldAdmin
 
 
 class HeroContentPublic(BaseModel):
     title: str
     subtitle: str
     description: str
+    image: str | None = None
 
 
 # --- Body ---

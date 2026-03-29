@@ -38,7 +38,7 @@ async def get_or_create_contact(db: AsyncSession) -> ContactInfo:
 
 
 async def get_hero(db: AsyncSession) -> dict:
-    keys = ["hero_title", "hero_subtitle", "hero_description"]
+    keys = ["hero_title", "hero_subtitle", "hero_description", "hero_image"]
     result = await db.execute(
         select(EditorialContent).where(
             EditorialContent.section_key.in_(keys)
@@ -49,6 +49,7 @@ async def get_hero(db: AsyncSession) -> dict:
         "title": rows.get("hero_title"),
         "subtitle": rows.get("hero_subtitle"),
         "description": rows.get("hero_description"),
+        "image": rows.get("hero_image"),
     }
 
 
@@ -58,12 +59,15 @@ async def update_hero(
     subtitle: str | None,
     description: str | None,
     user_id: uuid.UUID,
+    image: str | None = None,
 ) -> None:
     fields = {
         "hero_title": title,
         "hero_subtitle": subtitle or "",
         "hero_description": description or "",
     }
+    if image is not None:
+        fields["hero_image"] = image
     for key, value in fields.items():
         content = await get_or_create_content(db, key)
         content.content_text = value

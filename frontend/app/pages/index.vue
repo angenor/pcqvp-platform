@@ -13,6 +13,8 @@ const { fetchEditorial } = useEditorial()
 const heroTitle = ref('Plateforme de Suivi des Revenus Miniers')
 const heroSubtitle = ref('Collectivités Territoriales de Madagascar')
 const heroDescription = ref('Publiez Ce Que Vous Payez - Madagascar')
+const heroImageSrc = ref('/images/hero_background.jpg')
+const heroReady = ref(false)
 const bodyContent = ref<EditorJSData | null>(null)
 
 onMounted(async () => {
@@ -21,9 +23,12 @@ onMounted(async () => {
     if (data.hero.title) heroTitle.value = data.hero.title
     if (data.hero.subtitle) heroSubtitle.value = data.hero.subtitle
     if (data.hero.description) heroDescription.value = data.hero.description
+    if (data.hero.image) heroImageSrc.value = data.hero.image
     bodyContent.value = data.body.content_json as EditorJSData | null
   } catch {
     // use default values
+  } finally {
+    heroReady.value = true
   }
 })
 
@@ -39,7 +44,8 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
       <!-- Image de fond avec overlay -->
       <div class="absolute inset-0 z-0">
         <img
-          src="/images/hero_background.jpg"
+          v-if="heroReady"
+          :src="heroImageSrc"
           alt="Exploitation minière à Madagascar"
           class="w-full h-full object-cover"
         />

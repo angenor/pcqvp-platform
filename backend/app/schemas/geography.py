@@ -87,12 +87,14 @@ class ProvinceCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     code: str = Field(min_length=1, max_length=20)
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
 
 
 class ProvinceUpdate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     code: str = Field(min_length=1, max_length=20)
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
 
 
 class ProvinceList(BaseModel):
@@ -109,6 +111,7 @@ class ProvinceDetail(BaseModel):
     name: str
     code: str
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
     regions: list["RegionList"] = []
     created_at: datetime
     updated_at: datetime | None = None
@@ -129,6 +132,7 @@ class RegionCreate(BaseModel):
     code: str = Field(min_length=1, max_length=20)
     province_id: uuid.UUID
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
 
 
 class RegionUpdate(BaseModel):
@@ -136,6 +140,7 @@ class RegionUpdate(BaseModel):
     code: str = Field(min_length=1, max_length=20)
     province_id: uuid.UUID
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
 
 
 class RegionList(BaseModel):
@@ -154,6 +159,7 @@ class RegionDetail(BaseModel):
     code: str
     province_id: uuid.UUID
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
     communes: list["CommuneList"] = []
     created_at: datetime
     updated_at: datetime | None = None
@@ -174,6 +180,7 @@ class CommuneCreate(BaseModel):
     code: str = Field(min_length=1, max_length=20)
     region_id: uuid.UUID
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
 
 
 class CommuneUpdate(BaseModel):
@@ -181,6 +188,7 @@ class CommuneUpdate(BaseModel):
     code: str = Field(min_length=1, max_length=20)
     region_id: uuid.UUID
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
 
 
 class CommuneList(BaseModel):
@@ -199,6 +207,7 @@ class CommuneDetail(BaseModel):
     code: str
     region_id: uuid.UUID
     description_json: EditorJSData | None = None
+    banner_image: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
 
