@@ -21,6 +21,7 @@ class EditorJSBlock(BaseModel):
     id: str | None = None
     type: str
     data: dict
+    tunes: dict | None = None
 
     @field_validator("type")
     @classmethod

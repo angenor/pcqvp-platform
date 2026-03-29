@@ -13,6 +13,7 @@ from app.models.compte_administratif import (
     DepenseProgram,
     RecetteLine,
 )
+from app.models.editorial import ContactInfo, EditorialContent, ResourceLink
 from app.models.geography import Commune, Province, Region
 from app.models.newsletter import NewsletterSubscriber, SubscriberStatus
 from app.models.site_config import SiteConfiguration
@@ -22,6 +23,9 @@ from app.models.visit_log import EventType, VisitLog
 __all__ = [
     "Base",
     "UUIDBase",
+    "EditorialContent",
+    "ContactInfo",
+    "ResourceLink",
     "User",
     "Province",
     "Region",

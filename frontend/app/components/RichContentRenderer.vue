@@ -13,9 +13,15 @@ function handleImageError(blockId: string) {
 </script>
 
 <template>
-  <div class="rich-content space-y-4">
+  <div class="rich-content rich-content-flow">
     <template v-if="descriptionJson?.blocks?.length">
       <template v-for="(block, index) in descriptionJson.blocks" :key="block.id || index">
+        <!-- Clear float before headers and delimiters -->
+        <div
+          v-if="block.type === 'header' || block.type === 'delimiter'"
+          class="clear-both"
+        />
+
         <!-- Header -->
         <h2
           v-if="block.type === 'header' && block.data.level === 2"
@@ -43,11 +49,13 @@ function handleImageError(blockId: string) {
         <!-- Image -->
         <figure
           v-else-if="block.type === 'image'"
-          class="my-2"
-          :class="{
-            'float-left w-[45%] mr-6 mb-4': block.tunes?.imagePosition?.position === 'left',
-            'float-right w-[45%] ml-6 mb-4': block.tunes?.imagePosition?.position === 'right',
-          }"
+          :class="[
+            block.tunes?.imagePosition?.position === 'left'
+              ? 'float-left w-2/5 mr-6 mb-3 mt-1'
+              : block.tunes?.imagePosition?.position === 'right'
+                ? 'float-right w-2/5 ml-6 mb-3 mt-1'
+                : 'my-4',
+          ]"
         >
           <img
             v-if="block.data.file?.url && !brokenImages.has(block.id || String(index))"
@@ -191,9 +199,34 @@ function handleImageError(blockId: string) {
           />
         </div>
       </template>
+      <!-- Clearfix at the end of all blocks -->
+      <div class="clear-both" />
     </template>
     <p v-else class="text-(--text-muted) italic">
       Aucune description disponible.
     </p>
   </div>
 </template>
+
+<style scoped>
+/* Flow-based spacing: margins between blocks without breaking float context */
+.rich-content-flow > * + * {
+  margin-top: 1rem;
+}
+
+/* Floated images should not get top margin when they are the first or follow another float */
+.rich-content-flow > figure[class*="float-"] {
+  margin-top: 0.25rem;
+}
+
+/* Clearfix divs are invisible spacers */
+.rich-content-flow > .clear-both {
+  margin-top: 0;
+  height: 0;
+}
+
+/* After the clearfix (before a header), restore spacing */
+.rich-content-flow > .clear-both + * {
+  margin-top: 1.5rem;
+}
+</style>

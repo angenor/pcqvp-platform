@@ -46,6 +46,7 @@ const menuGroups: MenuGroup[] = [
   {
     title: 'Outils',
     items: [
+      { label: 'Éditoriaux', to: '/admin/editorial', icon: ['fas', 'pen-to-square'] },
       { label: 'Utilisateurs', to: '/admin/users', icon: ['fas', 'users'] },
       { label: 'Newsletter', to: '/admin/newsletter', icon: ['fas', 'envelope'] },
       { label: 'Analytics', to: '/admin/analytics', icon: ['fas', 'chart-bar'] },
