@@ -1,0 +1,32 @@
+services:
+  globaleaks:
+    image: globaleaks/globaleaks:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    container_name: globaleaks
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - globaleaks-data:/var/globaleaks:rw
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:8443/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  tor:
+    image: goldy/tor-hidden-service:latest
+    restart: unless-stopped
+    container_name: globaleaks-tor
+    environment:
+      GLOBALEAKS_TOR_SERVICE_HOSTS: "80:globaleaks:8080"
+    depends_on:
+      - globaleaks
+    volumes:
+      - tor-keys:/var/lib/tor/hidden_service/
+
+volumes:
+  globaleaks-data:
+  tor-keys:
