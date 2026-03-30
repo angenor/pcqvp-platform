@@ -4,6 +4,16 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _find_env_file() -> Path | None:
+    """Remonte l'arborescence pour trouver le .env le plus proche."""
+    current = Path(__file__).resolve().parent
+    for parent in [current, *current.parents]:
+        env_path = parent / ".env"
+        if env_path.is_file():
+            return env_path
+    return None
+
+
 class Settings(BaseSettings):
     DATABASE_URL: str
     BACKEND_HOST: str = "0.0.0.0"
@@ -35,7 +45,7 @@ class Settings(BaseSettings):
     ]
 
     model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parents[4] / ".env",
+        env_file=_find_env_file(),
         env_file_encoding="utf-8",
         extra="ignore",
     )
