@@ -86,7 +86,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Configurer l'URL GlobalLeaks dans le backend PCQVP via l'endpoint admin PUT /api/admin/config/globalleaks_url avec la valeur `https://alerte.miningobs.mg` (ou `https://<IP>:443` temporairement)
+- [x] T018 [US3] Configurer l'URL GlobalLeaks dans le backend PCQVP via l'endpoint admin PUT /api/admin/config/globalleaks_url avec la valeur `https://alerte.miningobs.mg` (ou `https://<IP>:443` temporairement)
 - [x] T019 [US3] Verifier que la page frontend/app/pages/signaler.vue affiche correctement le bouton "Acceder a GlobalLeaks" avec l'URL configuree
 - [x] T020 [US3] Verifier que le lien "Signaler" dans le header du layout frontend/app/layouts/default.vue dirige vers /signaler et que la chaine est fonctionnelle jusqu'a GlobalLeaks
 
