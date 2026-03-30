@@ -16,6 +16,10 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source and build
 COPY . .
+
+ARG NUXT_BACKEND_URL=http://backend:8000
+ENV NUXT_BACKEND_URL=${NUXT_BACKEND_URL}
+
 RUN pnpm build
 
 # --- Stage 2: Production ---

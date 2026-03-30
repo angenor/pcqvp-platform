@@ -31,10 +31,10 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/api/**': {
-      proxy: 'http://localhost:8000/api/**',
+      proxy: `${process.env.NUXT_BACKEND_URL || 'http://localhost:8000'}/api/**`,
     },
     '/uploads/**': {
-      proxy: 'http://localhost:8000/uploads/**',
+      proxy: `${process.env.NUXT_BACKEND_URL || 'http://localhost:8000'}/uploads/**`,
     },
   },
 })
