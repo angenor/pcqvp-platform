@@ -1,0 +1,125 @@
+# ===========================================
+# Docker Compose - Production
+# PCQVP Platform (remplacement de collectivites_territoriales)
+# Domain: kaominina-mangarahara.mg
+# ===========================================
+
+services:
+  # PostgreSQL 16
+  db:
+    image: postgres:16-alpine
+    container_name: pcqvp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pcqvp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - pcqvp_network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pcqvp_backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - FIRST_ADMIN_EMAIL=${FIRST_ADMIN_EMAIL:-admin@pcqvp.mg}
+      - FIRST_ADMIN_PASSWORD=${FIRST_ADMIN_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+      - UPLOAD_DIR=uploads/images
+      - MAX_IMAGE_SIZE=${MAX_IMAGE_SIZE:-5242880}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_FROM=${MAIL_FROM:-noreply@pcqvp.mg}
+      - MAIL_SERVER=${MAIL_SERVER:-localhost}
+      - MAIL_PORT=${MAIL_PORT:-587}
+    volumes:
+      - pcqvp_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - pcqvp_network
+
+  # Nuxt 4 Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pcqvp_frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - pcqvp_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: pcqvp_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/maintenance.html:/usr/share/nginx/html/maintenance.html:ro
+      - pcqvp_uploads:/app/uploads:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - pcqvp_network
+
+  # Alembic Migrations (run once)
+  migrations:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pcqvp_migrations
+    command: alembic upgrade head
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pcqvp_network
+    profiles:
+      - migrate
+
+volumes:
+  pcqvp_pgdata:
+  pcqvp_uploads:
+
+networks:
+  pcqvp_network:
+    driver: bridge
