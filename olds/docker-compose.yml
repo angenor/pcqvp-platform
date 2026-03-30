@@ -1,0 +1,142 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: revenus_miniers_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ti2025}
+      POSTGRES_DB: ${POSTGRES_DB:-revenus_miniers_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT_HOST:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-revenus_miniers_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend_collectivites_territoriales
+      dockerfile: Dockerfile
+    container_name: revenus_miniers_backend
+    restart: unless-stopped
+    environment:
+      - APP_NAME=Plateforme de Suivi des Revenus Miniers
+      - APP_VERSION=1.0.0
+      - DEBUG=${DEBUG:-False}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ti2025}
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-revenus_miniers_db}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production-use-strong-secret-key}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_MINUTES=10080
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000","http://frontend:3000"]
+      - FRONTEND_URL=http://localhost:3000
+      - BACKEND_URL=http://localhost:8000
+      - MAX_UPLOAD_SIZE_MB=10
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app_network
+
+  # Nuxt Frontend
+  frontend:
+    build:
+      context: ./frontend_collectivites_territoriales
+      dockerfile: Dockerfile
+      args:
+        - NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    container_name: revenus_miniers_frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # Database initialization with SQL scripts (run once)
+  db-init:
+    image: postgres:15-alpine
+    container_name: revenus_miniers_db_init
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ti2025}
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-revenus_miniers_db}
+    volumes:
+      - ./backend_collectivites_territoriales/bank/scripts:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/init-db.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    profiles:
+      - init
+
+  # Database migrations (run once)
+  migrations:
+    build:
+      context: ./backend_collectivites_territoriales
+      dockerfile: Dockerfile
+    container_name: revenus_miniers_migrations
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ti2025}
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-revenus_miniers_db}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production-use-strong-secret-key}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    profiles:
+      - migrate
+
+volumes:
+  postgres_data:
+    name: revenus_miniers_postgres_data
+  backend_uploads:
+    name: revenus_miniers_uploads
+  backend_logs:
+    name: revenus_miniers_logs
+
+networks:
+  app_network:
+    name: revenus_miniers_network
+    driver: bridge

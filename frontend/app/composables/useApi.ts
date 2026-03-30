@@ -1,6 +1,6 @@
 export function useApi() {
   const getAuthHeaders = (): Record<string, string> => {
-    const token = useState<string | null>('access_token').value
+    const token = useCookie('access_token').value
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 

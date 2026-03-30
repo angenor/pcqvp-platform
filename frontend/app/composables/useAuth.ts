@@ -2,7 +2,15 @@ import type { UserProfile, TokenResponse } from '~/types/auth'
 
 export function useAuth() {
   const user = useState<UserProfile | null>('auth_user', () => null)
-  const accessToken = useState<string | null>('access_token', () => null)
+  const accessTokenCookie = useCookie('access_token', {
+    maxAge: 60 * 30,
+    sameSite: 'lax',
+    path: '/',
+  })
+  const accessToken = computed({
+    get: () => accessTokenCookie.value,
+    set: (val: string | null) => { accessTokenCookie.value = val },
+  })
   const isAuthenticated = computed(() => !!user.value)
 
   async function login(email: string, password: string): Promise<void> {
@@ -32,9 +40,18 @@ export function useAuth() {
 
   async function refreshToken(): Promise<boolean> {
     try {
+      const headers: Record<string, string> = {}
+      if (import.meta.server) {
+        const reqHeaders = useRequestHeaders(['cookie'])
+        if (reqHeaders.cookie) {
+          headers.cookie = reqHeaders.cookie
+        }
+      }
+
       const data = await $fetch<TokenResponse>('/api/auth/refresh', {
         method: 'POST',
         credentials: 'include',
+        headers,
       })
       accessToken.value = data.access_token
       return true

@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     MAIL_SERVER: str = "localhost"
     MAIL_PORT: int = 587
     FRONTEND_URL: str = "http://localhost:3000"
+    COOKIE_SECURE: bool = False
 
     UPLOAD_DIR: str = "uploads/images"
     MAX_IMAGE_SIZE: int = 5 * 1024 * 1024
