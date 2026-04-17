@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { PublicCompteResponse, PublicDescriptionResponse } from '../../../../../packages/shared/types/public'
+import type {
+  PublicCompteResponse,
+  PublicDescriptionResponse,
+  PublicParentDocument,
+} from '../../../../packages/shared/types/public'
 
 const route = useRoute()
 const rawParam = route.params['type-id'] as string || `${route.params.type}-${route.params.id}`
@@ -7,7 +11,7 @@ const parts = rawParam.match(/^(province|region|commune)-(.+)$/)
 const collectiviteType = parts?.[1] || ''
 const collectiviteId = parts?.[2] || ''
 
-const { fetchAnnees, fetchDescription, fetchCompte, downloadExport } = usePublicComptes()
+const { fetchAnnees, fetchDescription, fetchCompte, fetchDocumentsLies, downloadExport } = usePublicComptes()
 const { fetchEditorial } = useEditorial()
 
 const description = ref<PublicDescriptionResponse | null>(null)
@@ -23,6 +27,36 @@ const error = ref('')
 const downloadingExcel = ref(false)
 const downloadingWord = ref(false)
 const downloadError = ref('')
+const parentDocuments = ref<PublicParentDocument[]>([])
+const previewOpen = ref(false)
+const previewType = ref('')
+const previewId = ref('')
+const previewAnnee = ref<number | null>(null)
+const previewName = ref('')
+const parentDownloading = ref<Record<string, boolean>>({})
+
+function openPreview(parent: PublicParentDocument, annee: number) {
+  previewType.value = parent.type
+  previewId.value = parent.id
+  previewAnnee.value = annee
+  previewName.value = parent.name
+  previewOpen.value = true
+}
+
+async function downloadParent(parent: PublicParentDocument, annee: number, format: 'xlsx' | 'docx') {
+  const key = `${parent.type}-${parent.id}-${annee}-${format}`
+  parentDownloading.value = { ...parentDownloading.value, [key]: true }
+  try {
+    await downloadExport(parent.type, parent.id, annee, format)
+  } finally {
+    parentDownloading.value = { ...parentDownloading.value, [key]: false }
+  }
+}
+
+function parentTypeLabel(t: string) {
+  const labels: Record<string, string> = { province: 'Province', region: 'Region', commune: 'Commune' }
+  return labels[t] || t
+}
 
 onMounted(async () => {
   if (!collectiviteType || !collectiviteId) {
@@ -32,13 +66,15 @@ onMounted(async () => {
   }
 
   try {
-    const [desc, years, editorial] = await Promise.all([
+    const [desc, years, editorial, docsLies] = await Promise.all([
       fetchDescription(collectiviteType, collectiviteId),
       fetchAnnees(collectiviteType, collectiviteId),
       fetchEditorial().catch(() => null),
+      fetchDocumentsLies(collectiviteType, collectiviteId).catch(() => ({ parents: [] })),
     ])
     description.value = desc
     annees.value = years
+    parentDocuments.value = docsLies.parents
     if (editorial?.hero?.image) {
       defaultHeroImage.value = editorial.hero.image
     }
@@ -315,7 +351,71 @@ useSeoMeta({
           <EquilibreTable :equilibre="compteData.equilibre" />
         </div>
       </div>
+
+      <!-- Documents liés (niveaux parents) -->
+      <section v-if="parentDocuments.length > 0" class="mt-10 print:hidden">
+        <h2 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          Documents liés
+        </h2>
+        <div class="space-y-4">
+          <div
+            v-for="parent in parentDocuments"
+            :key="`${parent.type}-${parent.id}`"
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+          >
+            <div class="mb-3">
+              <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                {{ parentTypeLabel(parent.type) }}
+              </p>
+              <p class="text-base font-semibold text-gray-900 dark:text-white">
+                {{ parent.name }}
+              </p>
+            </div>
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+              <li
+                v-for="annee in parent.annees"
+                :key="annee"
+                class="py-2 flex flex-wrap items-center justify-between gap-2"
+              >
+                <span class="text-sm text-gray-700 dark:text-gray-300">
+                  Compte administratif — Exercice {{ annee }}
+                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    @click="openPreview(parent, annee)"
+                  >
+                    Aperçu
+                  </button>
+                  <button
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                    :disabled="parentDownloading[`${parent.type}-${parent.id}-${annee}-xlsx`]"
+                    @click="downloadParent(parent, annee, 'xlsx')"
+                  >
+                    {{ parentDownloading[`${parent.type}-${parent.id}-${annee}-xlsx`] ? 'Chargement...' : 'Excel' }}
+                  </button>
+                  <button
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                    :disabled="parentDownloading[`${parent.type}-${parent.id}-${annee}-docx`]"
+                    @click="downloadParent(parent, annee, 'docx')"
+                  >
+                    {{ parentDownloading[`${parent.type}-${parent.id}-${annee}-docx`] ? 'Chargement...' : 'Word' }}
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
     </main>
     </div>
+
+    <CompteDocumentPreview
+      v-model="previewOpen"
+      :type="previewType"
+      :id="previewId"
+      :annee="previewAnnee"
+      :name="previewName"
+    />
   </div>
 </template>

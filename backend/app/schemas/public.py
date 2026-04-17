@@ -58,3 +58,14 @@ class PublicCompteResponse(BaseModel):
     depenses: dict
     recapitulatifs: dict
     equilibre: dict
+
+
+class PublicParentDocument(BaseModel):
+    type: str
+    id: uuid.UUID
+    name: str
+    annees: list[int]
+
+
+class PublicDocumentsLiesResponse(BaseModel):
+    parents: list[PublicParentDocument]

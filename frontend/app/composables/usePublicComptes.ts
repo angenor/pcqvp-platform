@@ -2,6 +2,7 @@ import type {
   PublicAnneesResponse,
   PublicDescriptionResponse,
   PublicCompteResponse,
+  PublicDocumentsLiesResponse,
 } from '../../../../packages/shared/types/public'
 
 export function usePublicComptes() {
@@ -23,6 +24,12 @@ export function usePublicComptes() {
   async function fetchCompte(type: string, id: string, annee: number): Promise<PublicCompteResponse> {
     return await apiFetch<PublicCompteResponse>(
       `/api/public/collectivites/${type}/${id}/comptes?annee=${annee}`
+    )
+  }
+
+  async function fetchDocumentsLies(type: string, id: string): Promise<PublicDocumentsLiesResponse> {
+    return await apiFetch<PublicDocumentsLiesResponse>(
+      `/api/public/collectivites/${type}/${id}/documents-lies`
     )
   }
 
@@ -57,5 +64,5 @@ export function usePublicComptes() {
     }
   }
 
-  return { fetchAnnees, fetchDescription, fetchCompte, downloadExport }
+  return { fetchAnnees, fetchDescription, fetchCompte, fetchDocumentsLies, downloadExport }
 }

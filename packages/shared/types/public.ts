@@ -101,6 +101,17 @@ export interface PublicEquilibreSection {
   excedent: number
 }
 
+export interface PublicParentDocument {
+  type: CollectiviteType
+  id: string
+  name: string
+  annees: number[]
+}
+
+export interface PublicDocumentsLiesResponse {
+  parents: PublicParentDocument[]
+}
+
 export interface PublicCompteResponse {
   compte: PublicCompteInfo
   recettes: {

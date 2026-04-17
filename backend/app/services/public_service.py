@@ -44,6 +44,12 @@ async def get_available_years(
     if not entity:
         return None
 
+    return await _get_published_years(db, ctype, cid)
+
+
+async def _get_published_years(
+    db: AsyncSession, ctype: str, cid: uuid.UUID
+) -> list[int]:
     result = await db.execute(
         select(CompteAdministratif.annee_exercice)
         .where(
@@ -54,6 +60,64 @@ async def get_available_years(
         .order_by(CompteAdministratif.annee_exercice.desc())
     )
     return list(result.scalars().all())
+
+
+async def get_parent_documents(
+    db: AsyncSession, ctype: str, cid: uuid.UUID
+) -> dict | None:
+    """Return parent collectivites with published years, skipping those with none."""
+    entity = await get_collectivite(db, ctype, cid)
+    if not entity:
+        return None
+
+    parents: list[dict] = []
+
+    if ctype == "commune":
+        result = await db.execute(
+            select(Commune)
+            .options(selectinload(Commune.region).selectinload(Region.province))
+            .where(Commune.id == cid)
+        )
+        commune = result.scalar_one_or_none()
+        region = commune.region if commune else None
+        if region:
+            region_years = await _get_published_years(db, "region", region.id)
+            if region_years:
+                parents.append({
+                    "type": "region",
+                    "id": region.id,
+                    "name": region.name,
+                    "annees": region_years,
+                })
+            province = region.province
+            if province:
+                prov_years = await _get_published_years(db, "province", province.id)
+                if prov_years:
+                    parents.append({
+                        "type": "province",
+                        "id": province.id,
+                        "name": province.name,
+                        "annees": prov_years,
+                    })
+    elif ctype == "region":
+        result = await db.execute(
+            select(Region)
+            .options(selectinload(Region.province))
+            .where(Region.id == cid)
+        )
+        region = result.scalar_one_or_none()
+        province = region.province if region else None
+        if province:
+            prov_years = await _get_published_years(db, "province", province.id)
+            if prov_years:
+                parents.append({
+                    "type": "province",
+                    "id": province.id,
+                    "name": province.name,
+                    "annees": prov_years,
+                })
+
+    return {"parents": parents}
 
 
 async def get_collectivite_description(

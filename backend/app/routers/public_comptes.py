@@ -10,10 +10,12 @@ from app.schemas.public import (
     PublicAnneesResponse,
     PublicCompteResponse,
     PublicDescriptionResponse,
+    PublicDocumentsLiesResponse,
 )
 from app.services.public_service import (
     get_available_years,
     get_collectivite_description,
+    get_parent_documents,
     get_published_compte,
 )
 
@@ -50,6 +52,25 @@ async def description(
         raise HTTPException(status_code=404, detail="Collectivite non trouvee")
 
     return desc
+
+
+@router.get(
+    "/{ctype}/{cid}/documents-lies",
+    response_model=PublicDocumentsLiesResponse,
+)
+async def documents_lies(
+    ctype: str,
+    cid: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    if ctype not in ("province", "region", "commune"):
+        raise HTTPException(status_code=404, detail="Type de collectivite invalide")
+
+    data = await get_parent_documents(db, ctype, cid)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Collectivite non trouvee")
+
+    return data
 
 
 @router.get("/{ctype}/{cid}/comptes", response_model=PublicCompteResponse)
