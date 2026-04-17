@@ -97,7 +97,7 @@ function handleGeoSubmit(selection: { type: string; id: string }) {
     <!-- Contenu principal sous le hero -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
       <!-- Section de présentation contextuelle (contenu éditorial) -->
-      <section v-if="bodyContent?.blocks?.length" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 transition-colors">
+      <section v-if="bodyContent?.blocks?.length">
         <RichContentRenderer :description-json="bodyContent" />
       </section>
 
