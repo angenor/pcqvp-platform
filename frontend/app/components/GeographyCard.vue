@@ -69,19 +69,21 @@ function handleCardClick() {
       <UiDropdownMenu :items="menuItems" position="right" />
     </div>
 
-    <!-- Financial links (regions only) -->
+    <!-- Financial shortcuts (region / commune) -->
     <div v-if="showFinancialLinks" class="mt-3 pt-3 border-t border-(--border-default) flex flex-col gap-1.5">
       <NuxtLink
-        :to="`/admin/accounts?collectivite_type=region&collectivite_id=${id}`"
+        :to="`/admin/accounts?collectivite_type=${type}&collectivite_id=${id}`"
         class="inline-flex items-center gap-1.5 text-xs text-(--color-primary) hover:underline"
+        aria-label="Voir les comptes de cette collectivité"
         @click.stop
       >
         <font-awesome-icon :icon="['fas', 'coins']" />
         Voir les comptes
       </NuxtLink>
       <NuxtLink
-        :to="`/admin/accounts/new?collectivite_type=region&collectivite_id=${id}`"
+        :to="`/admin/accounts/new?collectivite_type=${type}&collectivite_id=${id}`"
         class="inline-flex items-center gap-1.5 text-xs text-(--color-primary) hover:underline"
+        aria-label="Soumettre un compte pour cette collectivité"
         @click.stop
       >
         <font-awesome-icon :icon="['fas', 'plus-circle']" />

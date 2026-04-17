@@ -1,0 +1,227 @@
+openapi: 3.1.0
+info:
+  title: Documents officiels de collectivités — contrat 018
+  version: "0.1.0"
+  description: |
+    CRUD + remplacement de fichier + réordonnancement des documents officiels
+    attachés à une Province, une Région ou une Commune.
+
+paths:
+  /api/admin/collectivity-documents:
+    get:
+      summary: Liste paginée des documents d'une collectivité
+      operationId: listCollectivityDocuments
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: parent_type
+          required: true
+          schema: { $ref: "#/components/schemas/ParentType" }
+        - in: query
+          name: parent_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Liste ordonnée par position
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CollectivityDocument" }
+        "401": { description: Non authentifié }
+        "404": { description: Parent introuvable }
+
+    post:
+      summary: Attache un nouveau document à une collectivité
+      operationId: createCollectivityDocument
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CollectivityDocumentCreate" }
+      responses:
+        "201":
+          description: Document créé
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CollectivityDocument" }
+        "400": { description: Payload invalide (titre vide, MIME rejeté, taille, parent_type inconnu) }
+        "401": { description: Non authentifié }
+        "404": { description: Parent introuvable }
+
+  /api/admin/collectivity-documents/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+
+    put:
+      summary: Met à jour les métadonnées (titre) d'un document
+      operationId: updateCollectivityDocument
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CollectivityDocumentUpdate" }
+      responses:
+        "200":
+          description: Document mis à jour
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CollectivityDocument" }
+        "400": { description: Titre invalide }
+        "401": { description: Non authentifié }
+        "404": { description: Document introuvable }
+
+    delete:
+      summary: Supprime un document officiel et son fichier
+      operationId: deleteCollectivityDocument
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Supprimé }
+        "401": { description: Non authentifié }
+        "404": { description: Document introuvable }
+
+  /api/admin/collectivity-documents/{id}/file:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      summary: Remplace le fichier attaché (écrase l'existant, FR-009a)
+      operationId: replaceCollectivityDocumentFile
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [file_path, file_mime, file_size_bytes]
+              properties:
+                file_path: { type: string }
+                file_mime: { type: string }
+                file_size_bytes: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Fichier remplacé (updated_at actualisé)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CollectivityDocument" }
+        "400": { description: MIME ou taille invalide }
+        "401": { description: Non authentifié }
+        "404": { description: Document introuvable }
+
+  /api/admin/collectivity-documents/reorder:
+    patch:
+      summary: Réordonne les documents d'un parent
+      operationId: reorderCollectivityDocuments
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent_type, parent_id, ordered_ids]
+              properties:
+                parent_type: { $ref: "#/components/schemas/ParentType" }
+                parent_id: { type: string, format: uuid }
+                ordered_ids:
+                  type: array
+                  minItems: 1
+                  items: { type: string, format: uuid }
+                  description: |
+                    Liste complète et exhaustive des IDs documents du parent,
+                    dans le nouvel ordre souhaité. Toute omission ou ID étranger
+                    renvoie 400.
+      responses:
+        "200":
+          description: Nouveau tri
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CollectivityDocument" }
+        "400": { description: Liste invalide (manquant, doublon, ID étranger au parent) }
+        "401": { description: Non authentifié }
+        "404": { description: Parent introuvable }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ParentType:
+      type: string
+      enum: [province, region, commune]
+
+    CollectivityDocumentCreate:
+      type: object
+      required: [parent_type, parent_id, title, file_path, file_mime, file_size_bytes]
+      properties:
+        parent_type: { $ref: "#/components/schemas/ParentType" }
+        parent_id: { type: string, format: uuid }
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        file_path: { type: string, maxLength: 500 }
+        file_mime:
+          type: string
+          enum:
+            - application/pdf
+            - application/msword
+            - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+            - application/vnd.ms-excel
+            - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        file_size_bytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 20971520
+
+    CollectivityDocumentUpdate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+
+    CollectivityDocument:
+      type: object
+      required:
+        - id
+        - parent_type
+        - parent_id
+        - title
+        - file_path
+        - file_mime
+        - file_size_bytes
+        - position
+        - download_url
+        - created_at
+        - updated_at
+      properties:
+        id: { type: string, format: uuid }
+        parent_type: { $ref: "#/components/schemas/ParentType" }
+        parent_id: { type: string, format: uuid }
+        title: { type: string }
+        file_path: { type: string }
+        file_mime: { type: string }
+        file_size_bytes: { type: integer, format: int64 }
+        position: { type: integer, minimum: 0 }
+        download_url:
+          type: string
+          description: URL publique ou proxifiée pour le téléchargement
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }

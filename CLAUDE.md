@@ -110,6 +110,8 @@ Use multiple sub-agents in parallel for efficiency (10 max):
 - Python 3.12 (backend), TypeScript (frontend) + FastAPI, SQLAlchemy 2.0 async, Pydantic v2, Nuxt 4, Vue 3.5, Tailwind CSS 4 (016-banner-image-hero)
 - N/A (GlobalLeaks est un logiciel pre-construit deploye via Docker). Integration frontend : TypeScript/Vue 3.5 (Nuxt 4) + Docker, GlobalLeaks 5.0.89 (image `globaleaks/globaleaks:latest`), Tor (integre dans GlobalLeaks) (017-globaleaks-service)
 - Interne a GlobalLeaks (SQLite/volume Docker `globaleaks-data`), PostgreSQL 16 existant (non modifie) (017-globaleaks-service)
+- Python 3.12 (backend), TypeScript 5.x (frontend) + FastAPI 0.135+, SQLAlchemy 2.0 async, asyncpg, Pydantic v2, Alembic ; Nuxt 4.4+, Vue 3.5+, Tailwind CSS 4, `@editorjs/editorjs` + `@editorjs/image`, `@fortawesome/vue-fontawesome` (018-backoffice-ux-fixes)
+- PostgreSQL 16 via asyncpg ; fichiers téléversés sur disque sous `backend/uploads/` (servis par le backend sous `/uploads/...`) (018-backoffice-ux-fixes)
 
 ## Recent Changes
 - 014-region-admin-accounts: Added Python 3.12 (backend), TypeScript (frontend) + FastAPI, SQLAlchemy 2.0 async, Nuxt 4, Vue 3.5, Tailwind CSS 4

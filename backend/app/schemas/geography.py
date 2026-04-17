@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.collectivity_document import CollectivityDocumentRead
+
 SUPPORTED_BLOCK_TYPES = {
     "header",
     "paragraph",
@@ -113,6 +115,7 @@ class ProvinceDetail(BaseModel):
     description_json: EditorJSData | None = None
     banner_image: str | None = None
     regions: list["RegionList"] = []
+    documents: list[CollectivityDocumentRead] = []
     created_at: datetime
     updated_at: datetime | None = None
 
@@ -161,6 +164,7 @@ class RegionDetail(BaseModel):
     description_json: EditorJSData | None = None
     banner_image: str | None = None
     communes: list["CommuneList"] = []
+    documents: list[CollectivityDocumentRead] = []
     created_at: datetime
     updated_at: datetime | None = None
 
@@ -208,6 +212,7 @@ class CommuneDetail(BaseModel):
     region_id: uuid.UUID
     description_json: EditorJSData | None = None
     banner_image: str | None = None
+    documents: list[CollectivityDocumentRead] = []
     created_at: datetime
     updated_at: datetime | None = None
 

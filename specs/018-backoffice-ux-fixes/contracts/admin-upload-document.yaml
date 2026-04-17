@@ -1,0 +1,84 @@
+openapi: 3.1.0
+info:
+  title: Upload document officiel — contrat 018
+  version: "0.1.0"
+  description: |
+    Nouvel endpoint d'upload pour les documents officiels attachés aux collectivités
+    (PDF, DOC, DOCX, XLS, XLSX ≤ 20 Mo). Jumeau du endpoint image existant.
+
+paths:
+  /api/admin/upload/document:
+    post:
+      summary: Téléverse un document officiel
+      operationId: uploadCollectivityDocumentFile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [document]
+              properties:
+                document:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Upload réussi
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, file]
+                properties:
+                  success:
+                    type: integer
+                    enum: [1]
+                  file:
+                    type: object
+                    required: [url, name, size, mime]
+                    properties:
+                      url:
+                        type: string
+                        description: Chemin relatif servi sous /uploads/documents/
+                        example: "/uploads/documents/9f3a1c.pdf"
+                      name:
+                        type: string
+                        description: Nom original du fichier (utile pour pré-remplir le titre)
+                      size:
+                        type: integer
+                        format: int64
+                        description: Taille en octets
+                      mime:
+                        type: string
+                        description: MIME validé par le serveur
+        "401":
+          description: Non authentifié ou rôle insuffisant
+        "415":
+          description: MIME non supporté
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: Taille excédée (> 20 Mo)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string

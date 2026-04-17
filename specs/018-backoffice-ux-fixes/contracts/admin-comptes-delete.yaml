@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Suppression de compte administratif — contrat 018
+  version: "0.1.0"
+  description: |
+    Ajout d'une opération DELETE sur le routeur comptes administratifs
+    existant. Blocage si le compte est publié (FR-006a). Journalisation
+    audit obligatoire (FR-007).
+
+paths:
+  /api/admin/comptes/{compte_id}:
+    parameters:
+      - in: path
+        name: compte_id
+        required: true
+        schema: { type: string, format: uuid }
+    delete:
+      summary: Supprime définitivement un compte administratif en brouillon
+      operationId: deleteCompteAdministratif
+      security: [{ bearerAuth: [] }]
+      description: |
+        Accessible uniquement aux utilisateurs avec le rôle `admin`.
+        Si `compte.status == published`, renvoie 409 avec le payload
+        `CompteStillPublishedError`. La suppression cascade sur les
+        `recette_lines`, `depense_programs` et `change_logs` enfants.
+        Insère une entrée dans `audit_logs` (action=`compte_administratif.deleted`).
+      responses:
+        "204":
+          description: Supprimé et audit-loggué.
+        "401":
+          description: Non authentifié.
+        "403":
+          description: Rôle insuffisant (non admin).
+        "404":
+          description: Compte introuvable.
+        "409":
+          description: Compte publié — suppression refusée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompteStillPublishedError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CompteStillPublishedError:
+      type: object
+      required: [error, message, required_action]
+      properties:
+        error:
+          type: string
+          enum: [compte_published]
+        message:
+          type: string
+          example: >
+            Ce compte est publié et peut être référencé publiquement. Repassez-le
+            en brouillon avant suppression.
+        required_action:
+          type: string
+          enum: [set_status_draft]

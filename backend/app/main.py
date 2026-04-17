@@ -13,6 +13,9 @@ from app.core.database import engine
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.middleware.visit_tracker import VisitTrackerMiddleware
 from app.routers.admin_analytics import router as admin_analytics_router
+from app.routers.admin_collectivity_documents import (
+    router as admin_collectivity_documents_router,
+)
 from app.routers.admin_comptes import router as admin_comptes_router
 from app.routers.admin_config import router as admin_config_router
 from app.routers.admin_editorial import router as admin_editorial_router
@@ -53,6 +56,7 @@ app.include_router(public_comptes_router)
 app.include_router(admin_geography_router)
 app.include_router(admin_templates_router)
 app.include_router(admin_comptes_router)
+app.include_router(admin_collectivity_documents_router)
 app.include_router(search_router)
 app.include_router(newsletter_router)
 app.include_router(admin_newsletter_router)

@@ -148,6 +148,7 @@ async function confirmDelete() {
         :code="item.code"
         type="commune"
         :highlighted="idsWithComptes.has(item.id)"
+        :show-financial-links="true"
         @edit="handleEdit(item.id)"
         @delete="handleDelete(item.id)"
       />

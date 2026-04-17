@@ -8,6 +8,10 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from app.core.security import require_role
 from app.models.user import User
+from app.schemas.collectivity_document import (
+    ALLOWED_DOCUMENT_MIME_TYPES,
+    MAX_DOCUMENT_SIZE_BYTES,
+)
 
 router = APIRouter(prefix="/api/admin/upload", tags=["upload"])
 settings = get_settings()
@@ -17,6 +21,12 @@ def _get_upload_dir() -> Path:
     upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
     return upload_dir
+
+
+def _get_documents_dir() -> Path:
+    documents_dir = Path("uploads/documents")
+    documents_dir.mkdir(parents=True, exist_ok=True)
+    return documents_dir
 
 
 def _validate_content_type(content_type: str | None) -> str:
@@ -38,6 +48,25 @@ def _get_extension(content_type: str) -> str:
         "image/png": ".png",
         "image/webp": ".webp",
         "image/gif": ".gif",
+    }
+    return extensions.get(content_type, ".bin")
+
+
+_DOCX_MIME = (
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+)
+_XLSX_MIME = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+
+def _get_document_extension(content_type: str) -> str:
+    extensions = {
+        "application/pdf": ".pdf",
+        "application/msword": ".doc",
+        _DOCX_MIME: ".docx",
+        "application/vnd.ms-excel": ".xls",
+        _XLSX_MIME: ".xlsx",
     }
     return extensions.get(content_type, ".bin")
 
@@ -115,4 +144,51 @@ async def upload_image_by_url(
     return {
         "success": 1,
         "file": {"url": f"/uploads/images/{filename}"},
+    }
+
+
+@router.post("/document")
+async def upload_document(
+    document: UploadFile,
+    current_user: User = Depends(require_role("admin", "editor")),
+):
+    content_type = (document.content_type or "").split(";")[0].strip()
+    if content_type not in ALLOWED_DOCUMENT_MIME_TYPES:
+        raise HTTPException(
+            status_code=415,
+            detail={
+                "success": 0,
+                "detail": (
+                    "Type de fichier non autorisé. Types acceptés : "
+                    "PDF, DOC, DOCX, XLS, XLSX."
+                ),
+            },
+        )
+
+    content = await document.read()
+    size = len(content)
+    if size > MAX_DOCUMENT_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail={
+                "success": 0,
+                "detail": "Le fichier dépasse la taille maximale autorisée (20 MB).",
+            },
+        )
+
+    ext = _get_document_extension(content_type)
+    filename = f"{uuid.uuid4()}{ext}"
+    documents_dir = _get_documents_dir()
+    file_path = documents_dir / filename
+    file_path.write_bytes(content)
+
+    original_name = document.filename or filename
+    return {
+        "success": 1,
+        "file": {
+            "url": f"/uploads/documents/{filename}",
+            "name": original_name,
+            "size": size,
+            "mime": content_type,
+        },
     }

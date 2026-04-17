@@ -84,6 +84,12 @@ export function useComptes() {
     })
   }
 
+  function deleteCompte(compteId: string) {
+    return apiFetch<void>(`/api/admin/comptes/${compteId}`, {
+      method: 'DELETE',
+    })
+  }
+
   function fetchRecapRecettes(id: string) {
     return apiFetch<RecapRecettesResponse>(`/api/admin/comptes/${id}/recapitulatifs/recettes`)
   }
@@ -111,6 +117,7 @@ export function useComptes() {
     deleteProgramme,
     upsertDepenseLine,
     updateStatus,
+    deleteCompte,
     fetchRecapRecettes,
     fetchRecapDepenses,
     fetchEquilibre,

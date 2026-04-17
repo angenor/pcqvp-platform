@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: Upload image (contrat de non-régression, correctif 018)
+  version: "0.1.0"
+  description: |
+    Endpoint préexistant : documenté ici pour cadrer le correctif de l'insertion
+    d'image dans l'éditeur éditorial (US1). Aucune modification de contrat.
+    Le correctif visera la propagation d'authentification et/ou la liste MIME
+    côté backend selon le diagnostic R1.
+
+paths:
+  /api/admin/upload/image:
+    post:
+      summary: Téléverse une image utilisée par l'éditeur riche
+      operationId: uploadImage
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Upload réussi (format @editorjs/image)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, file]
+                properties:
+                  success:
+                    type: integer
+                    enum: [1]
+                  file:
+                    type: object
+                    required: [url]
+                    properties:
+                      url: { type: string, example: "/uploads/images/ab12c3.png" }
+        "401": { description: Non authentifié }
+        "415": { description: MIME non supporté (PNG / JPG / WEBP / GIF attendus) }
+        "413": { description: Taille excédée (> 5 Mo) }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

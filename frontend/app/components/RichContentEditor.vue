@@ -115,6 +115,13 @@ const emit = defineEmits<{
 
 const editorContainer = ref<HTMLElement | null>(null)
 let editor: EditorJS | null = null
+const uploadError = ref<string | null>(null)
+
+interface UploadResponse {
+  success: number
+  file?: { url: string }
+  detail?: string
+}
 
 const getInitialData = (): OutputData | undefined => {
   if (!props.modelValue) return undefined
@@ -130,12 +137,69 @@ const getInitialData = (): OutputData | undefined => {
   return undefined
 }
 
+async function uploadImageFile(file: File): Promise<UploadResponse> {
+  uploadError.value = null
+  const formData = new FormData()
+  formData.append('image', file)
+  const token = useCookie('access_token').value
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  try {
+    const data = await $fetch<UploadResponse>('/api/admin/upload/image', {
+      method: 'POST',
+      body: formData,
+      headers,
+      credentials: 'include',
+    })
+    return data
+  }
+  catch (err: unknown) {
+    const message = extractErrorMessage(err) || 'Échec de l\'insertion de l\'image'
+    uploadError.value = message
+    return { success: 0, detail: message }
+  }
+}
+
+async function uploadImageByUrl(url: string): Promise<UploadResponse> {
+  uploadError.value = null
+  const token = useCookie('access_token').value
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  try {
+    const data = await $fetch<UploadResponse>('/api/admin/upload/image-by-url', {
+      method: 'POST',
+      body: { url },
+      headers,
+      credentials: 'include',
+    })
+    return data
+  }
+  catch (err: unknown) {
+    const message = extractErrorMessage(err) || 'Échec de l\'insertion de l\'image'
+    uploadError.value = message
+    return { success: 0, detail: message }
+  }
+}
+
+function extractErrorMessage(err: unknown): string | null {
+  if (typeof err !== 'object' || err === null) return null
+  const anyErr = err as { statusCode?: number, data?: { detail?: unknown } }
+  const detail = anyErr.data?.detail
+  if (typeof detail === 'string') return detail
+  if (detail && typeof detail === 'object' && 'detail' in detail) {
+    const inner = (detail as { detail?: unknown }).detail
+    if (typeof inner === 'string') return inner
+  }
+  if (anyErr.statusCode === 401) return 'Session expirée. Reconnectez-vous pour téléverser une image.'
+  if (anyErr.statusCode === 413) return 'Image trop volumineuse (maximum 5 Mo).'
+  if (anyErr.statusCode === 415 || anyErr.statusCode === 400) return 'Type d\'image non supporté (JPG, PNG, WEBP, GIF).'
+  return null
+}
+
 onMounted(async () => {
   if (!editorContainer.value) return
 
   const initialData = getInitialData()
-  const token = useState<string | null>('access_token').value
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
 
   editor = new EditorJS({
     holder: editorContainer.value,
@@ -265,14 +329,12 @@ onMounted(async () => {
         class: ImageTool,
         tunes: ['imagePosition'],
         config: {
-          endpoints: {
-            byFile: '/api/admin/upload/image',
-            byUrl: '/api/admin/upload/image-by-url',
-          },
-          additionalRequestHeaders: authHeaders,
-          field: 'image',
           captionPlaceholder: 'Légende de l\'image',
           buttonContent: 'Sélectionner une image',
+          uploader: {
+            uploadByFile: (file: File) => uploadImageFile(file),
+            uploadByUrl: (url: string) => uploadImageByUrl(url),
+          },
         },
       },
       imagePosition: {
@@ -388,6 +450,24 @@ defineExpose({ save })
 
 <template>
   <div class="content-editor-wrapper">
+    <div
+      v-if="uploadError"
+      class="upload-error-banner"
+      role="alert"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="upload-error-icon">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ uploadError }}</span>
+      <button
+        type="button"
+        class="upload-error-dismiss"
+        aria-label="Fermer"
+        @click="uploadError = null"
+      >
+        ×
+      </button>
+    </div>
     <div class="content-editor">
       <!-- Toolbar fixe -->
       <div v-if="!readOnly" class="editor-toolbar">
@@ -446,6 +526,41 @@ defineExpose({ save })
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.upload-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.dark .upload-error-banner {
+  background-color: rgba(220, 38, 38, 0.15);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fca5a5;
+}
+
+.upload-error-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.upload-error-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
 }
 
 .content-editor {

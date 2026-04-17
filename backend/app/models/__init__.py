@@ -3,7 +3,9 @@ from app.models.account_template import (
     AccountTemplateColumn,
     AccountTemplateLine,
 )
+from app.models.audit_log import AuditLog
 from app.models.base import Base, UUIDBase
+from app.models.collectivity_document import CollectivityDocument
 from app.models.compte_administratif import (
     AccountChangeLog,
     CollectiviteType,
@@ -40,6 +42,8 @@ __all__ = [
     "DepenseProgram",
     "DepenseLine",
     "AccountChangeLog",
+    "AuditLog",
+    "CollectivityDocument",
     "NewsletterSubscriber",
     "SubscriberStatus",
     "VisitLog",

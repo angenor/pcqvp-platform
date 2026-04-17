@@ -7,7 +7,7 @@ definePageMeta({
 })
 
 const { createCompte } = useComptes()
-const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail } = useGeography()
+const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail, fetchCommuneDetail } = useGeography()
 
 const collectiviteType = ref<'province' | 'region' | 'commune'>('commune')
 const provinces = ref<ProvinceListItem[]>([])
@@ -50,8 +50,19 @@ onMounted(async () => {
     const qId = route.query.collectivite_id as string | undefined
     if (qType && ['province', 'region', 'commune'].includes(qType)) {
       collectiviteType.value = qType as 'province' | 'region' | 'commune'
-      if (qType === 'region' && qId) {
-        // Find province for this region, then set region
+      if (qType === 'commune' && qId) {
+        const communeDetail = await fetchCommuneDetail(qId)
+        if (communeDetail?.region_id) {
+          const regionDetail = await fetchRegionDetail(communeDetail.region_id)
+          if (regionDetail?.province_id) {
+            selectedProvinceId.value = regionDetail.province_id
+            regions.value = await fetchRegions(regionDetail.province_id)
+            selectedRegionId.value = communeDetail.region_id
+            communes.value = await fetchCommunes(communeDetail.region_id)
+            selectedCommuneId.value = qId
+          }
+        }
+      } else if (qType === 'region' && qId) {
         const regionDetail = await fetchRegionDetail(qId)
         if (regionDetail.province_id) {
           selectedProvinceId.value = regionDetail.province_id
