@@ -22,11 +22,9 @@ const selectedYear = ref('')
 
 const loading = ref(true)
 
-const hasComptesFilter = { hasComptes: true }
-
 onMounted(async () => {
   try {
-    provinces.value = await fetchProvinces(hasComptesFilter)
+    provinces.value = await fetchProvinces()
   } finally {
     loading.value = false
   }
@@ -39,7 +37,7 @@ watch(selectedProvinceId, async (id) => {
   regions.value = []
   communes.value = []
   if (id) {
-    regions.value = await fetchRegions(id, hasComptesFilter)
+    regions.value = await fetchRegions(id)
   }
 })
 
@@ -47,7 +45,7 @@ watch(selectedRegionId, async (id) => {
   selectedCommuneId.value = ''
   communes.value = []
   if (id) {
-    communes.value = await fetchCommunes(id, hasComptesFilter)
+    communes.value = await fetchCommunes(id)
   }
 })
 
