@@ -48,7 +48,8 @@ async def list_provinces(
     count_query = select(func.count()).select_from(Province)
 
     if has_comptes:
-        province_ids_with_comptes = (
+        # Provinces ayant au moins une commune avec un compte publié
+        province_ids_via_communes = (
             select(Province.id)
             .join(Region, Region.province_id == Province.id)
             .join(Commune, Commune.region_id == Region.id)
@@ -62,8 +63,25 @@ async def list_provinces(
             )
             .distinct()
         )
-        query = query.where(Province.id.in_(province_ids_with_comptes))
-        count_query = count_query.where(Province.id.in_(province_ids_with_comptes))
+        # Provinces ayant au moins une région avec un compte publié (type région)
+        province_ids_via_regions = (
+            select(Province.id)
+            .join(Region, Region.province_id == Province.id)
+            .join(
+                CompteAdministratif,
+                and_(
+                    CompteAdministratif.collectivite_type == "region",
+                    CompteAdministratif.collectivite_id == Region.id,
+                    CompteAdministratif.status == CompteStatus.published,
+                ),
+            )
+            .distinct()
+        )
+        has_comptes_filter = Province.id.in_(province_ids_via_communes) | Province.id.in_(
+            province_ids_via_regions
+        )
+        query = query.where(has_comptes_filter)
+        count_query = count_query.where(has_comptes_filter)
 
     if search:
         query = query.where(Province.name.ilike(f"%{search}%"))
