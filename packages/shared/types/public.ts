@@ -1,3 +1,4 @@
+import type { CollectivityDocument } from './collectivity'
 import type { CollectiviteType, CompteStatus } from './comptes'
 
 export interface PublicAnneesResponse {
@@ -9,6 +10,7 @@ export interface PublicDescriptionResponse {
   type: CollectiviteType
   description_json: { type: string; content?: string; url?: string; alt?: string }[]
   banner_image: string | null
+  documents: CollectivityDocument[]
 }
 
 export interface PublicTemplateColumn {
@@ -106,6 +108,7 @@ export interface PublicParentDocument {
   id: string
   name: string
   annees: number[]
+  documents: CollectivityDocument[]
 }
 
 export interface PublicDocumentsLiesResponse {

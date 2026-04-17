@@ -205,6 +205,12 @@ useSeoMeta({
         <RichContentRenderer :description-json="description!.description_json" />
       </div>
 
+      <!-- Documents officiels (niveau courant) -->
+      <CollectivityDocumentsList
+        v-if="description?.documents?.length"
+        :documents="description.documents"
+      />
+
       <!-- Year selector + action buttons -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 print:hidden">
         <div class="flex items-center gap-3">
@@ -402,6 +408,24 @@ useSeoMeta({
                     {{ parentDownloading[`${parent.type}-${parent.id}-${annee}-docx`] ? 'Chargement...' : 'Word' }}
                   </button>
                 </div>
+              </li>
+              <li
+                v-for="doc in parent.documents"
+                :key="doc.id"
+                class="py-2 flex flex-wrap items-center justify-between gap-2"
+              >
+                <span class="text-sm text-gray-700 dark:text-gray-300 truncate">
+                  {{ doc.title }}
+                </span>
+                <a
+                  :href="doc.download_url"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-blue-200 dark:border-blue-700 rounded-md text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                >
+                  <font-awesome-icon :icon="['fas', 'download']" />
+                  <span>Télécharger</span>
+                </a>
               </li>
             </ul>
           </div>

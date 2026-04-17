@@ -17,6 +17,7 @@ from app.services.account_service import (
     get_depenses_with_computed,
     get_recettes_with_computed,
 )
+from app.services.collectivity_document import list_for_parent, to_read_dict
 from app.services.compte_service import get_collectivite_name
 
 MODEL_MAP = {
@@ -65,12 +66,28 @@ async def _get_published_years(
 async def get_parent_documents(
     db: AsyncSession, ctype: str, cid: uuid.UUID
 ) -> dict | None:
-    """Return parent collectivites with published years, skipping those with none."""
+    """Return parent collectivites with published compte years and uploaded documents.
+
+    Skip parents that have neither published comptes nor uploaded documents.
+    """
     entity = await get_collectivite(db, ctype, cid)
     if not entity:
         return None
 
     parents: list[dict] = []
+
+    async def _build(ptype: str, pid: uuid.UUID, pname: str) -> dict | None:
+        years = await _get_published_years(db, ptype, pid)
+        docs = await list_for_parent(db, ptype, pid)
+        if not years and not docs:
+            return None
+        return {
+            "type": ptype,
+            "id": pid,
+            "name": pname,
+            "annees": years,
+            "documents": [to_read_dict(d) for d in docs],
+        }
 
     if ctype == "commune":
         result = await db.execute(
@@ -81,24 +98,14 @@ async def get_parent_documents(
         commune = result.scalar_one_or_none()
         region = commune.region if commune else None
         if region:
-            region_years = await _get_published_years(db, "region", region.id)
-            if region_years:
-                parents.append({
-                    "type": "region",
-                    "id": region.id,
-                    "name": region.name,
-                    "annees": region_years,
-                })
+            entry = await _build("region", region.id, region.name)
+            if entry:
+                parents.append(entry)
             province = region.province
             if province:
-                prov_years = await _get_published_years(db, "province", province.id)
-                if prov_years:
-                    parents.append({
-                        "type": "province",
-                        "id": province.id,
-                        "name": province.name,
-                        "annees": prov_years,
-                    })
+                entry = await _build("province", province.id, province.name)
+                if entry:
+                    parents.append(entry)
     elif ctype == "region":
         result = await db.execute(
             select(Region)
@@ -108,14 +115,9 @@ async def get_parent_documents(
         region = result.scalar_one_or_none()
         province = region.province if region else None
         if province:
-            prov_years = await _get_published_years(db, "province", province.id)
-            if prov_years:
-                parents.append({
-                    "type": "province",
-                    "id": province.id,
-                    "name": province.name,
-                    "annees": prov_years,
-                })
+            entry = await _build("province", province.id, province.name)
+            if entry:
+                parents.append(entry)
 
     return {"parents": parents}
 
@@ -123,16 +125,19 @@ async def get_parent_documents(
 async def get_collectivite_description(
     db: AsyncSession, ctype: str, cid: uuid.UUID
 ) -> dict | None:
-    """Return collectivite name and description_json."""
+    """Return collectivite name, description_json, and uploaded documents."""
     entity = await get_collectivite(db, ctype, cid)
     if not entity:
         return None
+
+    documents = await list_for_parent(db, ctype, cid)
 
     return {
         "name": entity.name,
         "type": ctype,
         "description_json": entity.description_json or [],
         "banner_image": entity.banner_image,
+        "documents": [to_read_dict(d) for d in documents],
     }
 
 

@@ -2,6 +2,8 @@ import uuid
 
 from pydantic import BaseModel
 
+from app.schemas.collectivity_document import CollectivityDocumentRead
+
 
 class PublicAnneesResponse(BaseModel):
     annees: list[int]
@@ -12,6 +14,7 @@ class PublicDescriptionResponse(BaseModel):
     type: str
     description_json: list[dict] | dict | None = []
     banner_image: str | None = None
+    documents: list[CollectivityDocumentRead] = []
 
 
 class PublicTemplateColumn(BaseModel):
@@ -65,6 +68,7 @@ class PublicParentDocument(BaseModel):
     id: uuid.UUID
     name: str
     annees: list[int]
+    documents: list[CollectivityDocumentRead] = []
 
 
 class PublicDocumentsLiesResponse(BaseModel):
