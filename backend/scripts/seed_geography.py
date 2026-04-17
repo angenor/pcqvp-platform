@@ -5,7 +5,7 @@ import asyncio
 from sqlalchemy import select
 
 from app.core.database import async_session
-from app.models.geography import Province, Region, Commune
+from app.models.geography import Commune, Province, Region
 
 # Madagascar: 6 provinces, 22 régions, communes représentatives
 GEOGRAPHY_DATA = {

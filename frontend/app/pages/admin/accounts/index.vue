@@ -7,8 +7,8 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { fetchComptes, updateStatus } = useComptes()
-const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail } = useGeography()
+const { fetchComptes, updateStatus, deleteCompte } = useComptes()
+const { fetchProvinces, fetchRegions, fetchCommunes, fetchRegionDetail, fetchCommuneDetail } = useGeography()
 const { user } = useAuth()
 
 const isAdmin = computed(() => user.value?.role === 'admin')
@@ -62,7 +62,19 @@ onMounted(async () => {
   const qId = route.query.collectivite_id as string | undefined
   if (qType && ['province', 'region', 'commune'].includes(qType)) {
     filterType.value = qType
-    if (qType === 'region' && qId) {
+    if (qType === 'commune' && qId) {
+      const communeDetail = await fetchCommuneDetail(qId)
+      if (communeDetail?.region_id) {
+        const regionDetail = await fetchRegionDetail(communeDetail.region_id)
+        if (regionDetail?.province_id) {
+          selectedProvinceId.value = regionDetail.province_id
+          regions.value = await fetchRegions(regionDetail.province_id)
+          selectedRegionId.value = communeDetail.region_id
+          communes.value = await fetchCommunes(communeDetail.region_id)
+          selectedCommuneId.value = qId
+        }
+      }
+    } else if (qType === 'region' && qId) {
       const regionDetail = await fetchRegionDetail(qId)
       if (regionDetail.province_id) {
         selectedProvinceId.value = regionDetail.province_id
@@ -112,6 +124,14 @@ const selectedCollectiviteId = computed(() => {
   return undefined
 })
 
+const isFilteredByCollectivite = computed(() => Boolean(filterType.value && selectedCollectiviteId.value))
+
+const emptyMessage = computed(() =>
+  isFilteredByCollectivite.value
+    ? 'Aucun compte pour cette collectivité pour le moment.'
+    : 'Aucun compte trouvé',
+)
+
 async function loadData() {
   loading.value = true
   try {
@@ -136,6 +156,76 @@ async function toggleStatus(row: CompteListItem) {
     await loadData()
   } catch {
     // ignore
+  }
+}
+
+// --- Delete flow ---
+
+const deleteTarget = ref<CompteListItem | null>(null)
+const deleteLoading = ref(false)
+const deleteBlocked = ref(false)
+const deleteError = ref<string | null>(null)
+
+const deleteModalOpen = computed(() => deleteTarget.value !== null)
+const deleteLabel = computed(() => {
+  const row = deleteTarget.value
+  if (!row) return ''
+  return `${row.collectivite_name || row.collectivite_type} ${row.annee_exercice}`
+})
+
+function openDeleteModal(row: CompteListItem) {
+  deleteError.value = null
+  deleteBlocked.value = row.status === 'published'
+  deleteTarget.value = row
+}
+
+function closeDeleteModal() {
+  if (deleteLoading.value) return
+  deleteTarget.value = null
+  deleteError.value = null
+  deleteBlocked.value = false
+}
+
+async function confirmDelete() {
+  const row = deleteTarget.value
+  if (!row) return
+  deleteLoading.value = true
+  deleteError.value = null
+  try {
+    await deleteCompte(row.id)
+    deleteTarget.value = null
+    deleteBlocked.value = false
+    await loadData()
+  } catch (err: unknown) {
+    const anyErr = err as { statusCode?: number, data?: { detail?: { error?: string, message?: string } | string } }
+    if (anyErr.statusCode === 409) {
+      deleteBlocked.value = true
+      const detail = anyErr.data?.detail
+      if (detail && typeof detail === 'object' && detail.message) {
+        deleteError.value = detail.message
+      }
+    } else {
+      deleteError.value = 'Suppression impossible. Réessayez ou contactez un administrateur.'
+    }
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+async function setDraftFromModal() {
+  const row = deleteTarget.value
+  if (!row) return
+  deleteLoading.value = true
+  try {
+    await updateStatus(row.id, { status: 'draft' })
+    deleteBlocked.value = false
+    await loadData()
+    const refreshed = items.value.find(c => c.id === row.id) ?? null
+    deleteTarget.value = refreshed
+  } catch {
+    deleteError.value = 'Impossible de repasser le compte en brouillon.'
+  } finally {
+    deleteLoading.value = false
   }
 }
 
@@ -172,10 +262,19 @@ function formatDate(d: string | null): string {
       :data="items"
       :loading="loading"
       :searchable="false"
-      empty-message="Aucun compte trouve"
+      :empty-message="emptyMessage"
       :empty-icon="['fas', 'calculator']"
       :row-link="(row: any) => `/admin/accounts/${row.id}`"
     >
+      <template v-if="isFilteredByCollectivite" #empty-action>
+        <NuxtLink
+          :to="`/admin/accounts/new?collectivite_type=${filterType}&collectivite_id=${selectedCollectiviteId}`"
+          class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+        >
+          <font-awesome-icon :icon="['fas', 'plus-circle']" />
+          Soumettre un compte pour cette collectivité
+        </NuxtLink>
+      </template>
       <template #cell-collectivite_name="{ row, value }">
         <NuxtLink
           :to="`/admin/accounts/${row.id}`"
@@ -213,9 +312,29 @@ function formatDate(d: string | null): string {
           >
             {{ row.status === 'published' ? 'Depublier' : 'Publier' }}
           </button>
+          <button
+            v-if="isAdmin"
+            class="text-xs px-2 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30 transition-colors"
+            title="Supprimer ce compte"
+            aria-label="Supprimer ce compte"
+            @click="openDeleteModal(row)"
+          >
+            Supprimer
+          </button>
         </div>
       </template>
     </UiDataTable>
+
+    <ConfirmDeleteCompteModal
+      :open="deleteModalOpen"
+      :loading="deleteLoading"
+      :blocked="deleteBlocked"
+      :compte-label="deleteLabel"
+      :error-message="deleteError"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
+      @set-draft="setDraftFromModal"
+    />
 
     <div v-if="items.length > 0" class="mt-3 text-sm text-(--text-muted)">
       {{ total }} compte{{ total > 1 ? 's' : '' }}

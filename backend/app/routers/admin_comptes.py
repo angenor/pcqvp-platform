@@ -28,6 +28,7 @@ from app.schemas.compte_administratif import (
     StatusUpdate,
 )
 from app.services import account_service, compte_service
+from app.services.audit_log import record_compte_deletion
 
 router = APIRouter(prefix="/api/admin/comptes", tags=["admin-comptes"])
 
@@ -253,6 +254,37 @@ async def upsert_depense(
         values=result.values,
         computed=computed,
     )
+
+
+# --- Delete ---
+
+
+@router.delete("/{compte_id}", status_code=204)
+async def delete_compte(
+    compte_id: uuid.UUID,
+    current_user: User = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    compte = await compte_service.get_compte_by_id(db, compte_id)
+    if not compte:
+        raise HTTPException(status_code=404, detail="Compte non trouve")
+
+    if compte.status.value == "published":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "compte_published",
+                "message": (
+                    "Ce compte est publie et peut etre reference publiquement. "
+                    "Repassez-le en brouillon avant suppression."
+                ),
+                "required_action": "set_status_draft",
+            },
+        )
+
+    await record_compte_deletion(db, current_user, compte)
+    await db.delete(compte)
+    await db.commit()
 
 
 # --- Status ---

@@ -11,7 +11,11 @@ from sqlalchemy import select
 from app.core.config import get_settings
 from app.core.database import async_session
 from app.core.security import hash_password
-from app.models.account_template import AccountTemplate, AccountTemplateLine, TemplateType
+from app.models.account_template import (
+    AccountTemplate,
+    AccountTemplateLine,
+    TemplateType,
+)
 from app.models.compte_administratif import (
     CollectiviteType,
     CompteAdministratif,

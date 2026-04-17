@@ -192,6 +192,13 @@ async function handleSubmit() {
           <p v-if="uploading" class="mt-1 text-sm text-(--text-muted)">Upload en cours...</p>
         </div>
 
+        <ClientOnly v-if="!isNew">
+          <CollectivityDocumentsEditor
+            parent-type="region"
+            :parent-id="(route.params.id as string)"
+          />
+        </ClientOnly>
+
         <UiModal v-model="showImageEditor" title="Editer l'image banniere" size="full" :closable="true" @close="handleEditorCancel">
           <ClientOnly>
             <ImageEditor
