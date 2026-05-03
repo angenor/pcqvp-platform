@@ -33,6 +33,18 @@ const addLineLoading = ref(false)
 const deletingLineId = ref<string | null>(null)
 const deleteError = ref('')
 
+// Edit
+const editingLine = ref<TemplateLine | null>(null)
+const editForm = ref({
+  compte_code: '',
+  intitule: '',
+  level: 3,
+  parent_code: '' as string,
+  section: 'fonctionnement' as 'fonctionnement' | 'investissement',
+})
+const editError = ref('')
+const editLoading = ref(false)
+
 async function loadTemplate() {
   loading.value = true
   error.value = ''
@@ -164,6 +176,57 @@ async function submitAddLine() {
     addLineError.value = e?.data?.detail || 'Erreur lors de l\'ajout'
   } finally {
     addLineLoading.value = false
+  }
+}
+
+// Edit line
+function openEdit(line: TemplateLine) {
+  editingLine.value = line
+  editForm.value = {
+    compte_code: line.compte_code,
+    intitule: line.intitule,
+    level: line.level,
+    parent_code: line.parent_code ?? '',
+    section: line.section,
+  }
+  editError.value = ''
+}
+
+function closeEdit() {
+  editingLine.value = null
+  editError.value = ''
+}
+
+const editAvailableParents = computed(() => {
+  if (!template.value) return []
+  const targetLevel = editForm.value.level - 1
+  return template.value.lines.filter(l => l.level === targetLevel)
+})
+
+async function submitEdit() {
+  if (!editingLine.value || !template.value) return
+  editLoading.value = true
+  editError.value = ''
+  try {
+    const updatedLines: TemplateLine[] = template.value.lines.map((l: TemplateLine) =>
+      l.id === editingLine.value!.id
+        ? {
+            ...l,
+            compte_code: editForm.value.compte_code,
+            intitule: editForm.value.intitule,
+            level: editForm.value.level,
+            parent_code: editForm.value.parent_code || null,
+            section: editForm.value.section,
+          }
+        : l
+    )
+    await updateLines(route.params.id as string, updatedLines)
+    editingLine.value = null
+    await loadTemplate()
+  } catch (e: any) {
+    editError.value = e?.data?.detail || 'Erreur lors de la modification'
+  } finally {
+    editLoading.value = false
   }
 }
 
@@ -381,13 +444,21 @@ const availableParents = computed(() => {
                     </td>
                     <td class="py-1.5 px-3 text-xs text-(--text-muted)">{{ line.level }}</td>
                     <td class="py-1.5 px-3 text-right">
-                      <button
-                        v-if="line.level === 3"
-                        class="text-xs text-(--color-error) hover:text-(--color-error) transition-colors"
-                        @click="confirmDeleteLine(line.id)"
-                      >
-                        Supprimer
-                      </button>
+                      <div class="flex justify-end gap-3">
+                        <button
+                          class="text-xs text-(--color-primary) hover:underline transition-colors"
+                          @click="openEdit(line)"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          v-if="line.level === 3"
+                          class="text-xs text-(--color-error) hover:text-(--color-error) transition-colors"
+                          @click="confirmDeleteLine(line.id)"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -397,6 +468,67 @@ const availableParents = computed(() => {
         </div>
       </div>
     </template>
+
+    <!-- Edit line modal -->
+    <div
+      v-if="editingLine"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="closeEdit"
+    >
+      <div class="bg-(--bg-card) rounded-lg p-6 max-w-lg w-full mx-4 border border-(--border-default)">
+        <h3 class="text-lg font-semibold text-(--text-primary) mb-4">Modifier la ligne</h3>
+        <div v-if="editError" class="mb-3 text-sm text-(--color-error)">{{ editError }}</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-(--text-secondary) mb-1">Code compte</label>
+            <input v-model="editForm.compte_code" type="text" class="w-full px-3 py-1.5 text-sm border border-(--border-default) rounded-md bg-(--bg-card) text-(--text-primary)" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-(--text-secondary) mb-1">Intitule</label>
+            <input v-model="editForm.intitule" type="text" class="w-full px-3 py-1.5 text-sm border border-(--border-default) rounded-md bg-(--bg-card) text-(--text-primary)" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-(--text-secondary) mb-1">Niveau</label>
+            <select v-model.number="editForm.level" class="w-full px-3 py-1.5 text-sm border border-(--border-default) rounded-md bg-(--bg-card) text-(--text-primary)">
+              <option :value="1">Niveau 1</option>
+              <option :value="2">Niveau 2</option>
+              <option :value="3">Niveau 3</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-(--text-secondary) mb-1">Code parent</label>
+            <select v-model="editForm.parent_code" class="w-full px-3 py-1.5 text-sm border border-(--border-default) rounded-md bg-(--bg-card) text-(--text-primary)">
+              <option value="">Aucun (Niveau 1)</option>
+              <option v-for="p in editAvailableParents" :key="p.compte_code" :value="p.compte_code">
+                {{ p.compte_code }} - {{ p.intitule }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-(--text-secondary) mb-1">Section</label>
+            <select v-model="editForm.section" class="w-full px-3 py-1.5 text-sm border border-(--border-default) rounded-md bg-(--bg-card) text-(--text-primary)">
+              <option value="fonctionnement">Fonctionnement</option>
+              <option value="investissement">Investissement</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button
+            class="px-3 py-1.5 text-sm rounded-md border border-(--border-default) text-(--text-secondary) hover:bg-(--interactive-hover) transition-colors"
+            @click="closeEdit"
+          >
+            Annuler
+          </button>
+          <button
+            class="px-3 py-1.5 text-sm rounded-md bg-(--color-primary) text-white hover:bg-(--color-primary-700) disabled:opacity-50 transition-colors"
+            :disabled="editLoading || !editForm.compte_code || !editForm.intitule"
+            @click="submitEdit"
+          >
+            {{ editLoading ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Delete confirmation modal -->
     <div
