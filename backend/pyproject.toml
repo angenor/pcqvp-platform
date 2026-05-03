@@ -21,6 +21,9 @@ dependencies = [
     "fastapi-mail>=1.4.0",
     "itsdangerous>=2.1.0",
     "httpx",
+    "shapely>=2.0",
+    "simplification>=0.7",
+    "ijson>=3.2",
 ]
 
 [project.optional-dependencies]

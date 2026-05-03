@@ -4,6 +4,9 @@
 
 `claude --dangerously-skip-permissions`
 
+  # 2. nettoyer caches Vite + Nuxt                                                              
+  `rm -rf .nuxt .output node_modules/.vite node_modules/.cache`
+
 voici ce que je veux pour le backoffice:
 # sur la page des provinces Admin: 
 afficher la liste des province en grille

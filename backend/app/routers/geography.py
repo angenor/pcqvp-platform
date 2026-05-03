@@ -1,9 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.database import get_db
+from app.services import geodata_service
 from app.schemas.geography import (
     CommuneDetail,
     CommuneList,
@@ -99,3 +102,37 @@ async def get_commune(commune_id: uuid.UUID, db: AsyncSession = Depends(get_db))
 @router.get("/geography/hierarchy", response_model=list[HierarchyProvince])
 async def hierarchy(db: AsyncSession = Depends(get_db)):
     return await get_hierarchy(db)
+
+
+@router.get("/geography/regions/geojson")
+async def regions_geojson(
+    request: Request, db: AsyncSession = Depends(get_db)
+):
+    settings = get_settings()
+    version = await geodata_service.get_active_version(db)
+    if version is None:
+        raise HTTPException(
+            status_code=503, detail="No active geodata version"
+        )
+    etag = f'W/"{version.id}"'
+    # `no-cache` force le navigateur à revalider via ETag à chaque requête,
+    # garantissant un rollover immédiat après activation/rollback côté admin.
+    # Le serveur répond 304 si l'ETag correspond → coût réseau minimal.
+    cache_header = (
+        f"public, max-age=0, must-revalidate, "
+        f"stale-while-revalidate={settings.GEODATA_PUBLIC_CACHE_MAX_AGE}"
+    )
+    if_none_match = request.headers.get("if-none-match")
+    if if_none_match and if_none_match.strip() == etag:
+        return Response(
+            status_code=304,
+            headers={"ETag": etag, "Cache-Control": cache_header},
+        )
+    return JSONResponse(
+        content=version.geojson_processed,
+        headers={
+            "ETag": etag,
+            "Cache-Control": cache_header,
+            "Content-Type": "application/geo+json",
+        },
+    )

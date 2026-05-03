@@ -19,6 +19,7 @@ from app.routers.admin_collectivity_documents import (
 from app.routers.admin_comptes import router as admin_comptes_router
 from app.routers.admin_config import router as admin_config_router
 from app.routers.admin_editorial import router as admin_editorial_router
+from app.routers.admin_geodata import router as admin_geodata_router
 from app.routers.admin_geography import router as admin_geography_router
 from app.routers.admin_newsletter import router as admin_newsletter_router
 from app.routers.admin_templates import router as admin_templates_router
@@ -54,6 +55,7 @@ app.include_router(auth_router)
 app.include_router(geography_router)
 app.include_router(public_comptes_router)
 app.include_router(admin_geography_router)
+app.include_router(admin_geodata_router)
 app.include_router(admin_templates_router)
 app.include_router(admin_comptes_router)
 app.include_router(admin_collectivity_documents_router)

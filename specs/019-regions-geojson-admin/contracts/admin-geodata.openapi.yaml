@@ -1,0 +1,289 @@
+openapi: 3.1.0
+info:
+  title: PCQVP — Admin Geodata API
+  version: 0.1.0
+  description: |
+    Endpoints d'administration des versions de GeoJSON regional Madagascar.
+    Reserves au role `admin`. Toutes les operations sensibles (upload, activation,
+    suppression) sont tracees dans `audit_logs`.
+
+servers:
+  - url: http://localhost:8000
+    description: Dev local
+
+tags:
+  - name: admin-geodata
+    description: Gestion des versions GeoJSON regionales (admin only)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/admin/geodata/regions/upload:
+    post:
+      tags: [admin-geodata]
+      summary: Televerser un nouveau GeoJSON regional
+      description: |
+        Demarre le pipeline de traitement (parse, filter, dedup, normalize,
+        simplify, validate). Synchronous si < 5 s ; sinon retourne 202 avec un
+        `job_id` et l'UI poll `/jobs/{job_id}`.
+      operationId: uploadGeodataVersion
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Fichier `.geojson` ou `.json`, <= 50 Mo
+                notes:
+                  type: string
+                  maxLength: 1000
+                  description: Notes libres optionnelles
+      responses:
+        '201':
+          description: Pipeline synchrone abouti (< 5 s) — version creee (inactive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '202':
+          description: Pipeline asynchrone — polling requis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAccepted'
+        '400':
+          description: Fichier invalide (format, taille, GeoJSON malforme, aucune feature exploitable)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { description: Non authentifie }
+        '403': { description: Authentifie mais role != admin }
+        '413':
+          description: Fichier > 50 Mo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429':
+          description: Limite de debit atteinte (10 uploads/h/admin)
+
+  /api/admin/geodata/regions/jobs/{job_id}:
+    get:
+      tags: [admin-geodata]
+      summary: Statut d'un pipeline asynchrone
+      operationId: getGeodataJob
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Statut courant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobStatus' }
+        '404': { description: Job inconnu ou expire (TTL 30 min) }
+
+  /api/admin/geodata/regions/versions:
+    get:
+      tags: [admin-geodata]
+      summary: Lister les versions (pagine)
+      operationId: listGeodataVersions
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Liste paginee
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/VersionListItem' }
+                  total: { type: integer }
+
+  /api/admin/geodata/regions/versions/{id}:
+    get:
+      tags: [admin-geodata]
+      summary: Detail d'une version (incluant le GeoJSON traite, pour preview)
+      operationId: getGeodataVersion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Version trouvee
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VersionDetail' }
+        '404': { description: Version inconnue }
+
+    delete:
+      tags: [admin-geodata]
+      summary: Supprimer une version (interdit si active)
+      operationId: deleteGeodataVersion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Supprimee }
+        '404': { description: Version inconnue }
+        '409':
+          description: Version active — suppression refusee
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /api/admin/geodata/regions/versions/{id}/activate:
+    post:
+      tags: [admin-geodata]
+      summary: Activer la version cible et desactiver l'actuelle (atomique)
+      operationId: activateGeodataVersion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Activation reussie
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VersionDetail' }
+        '404': { description: Version inconnue }
+        '409':
+          description: Conflit de concurrence (autre activation en cours)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UploadResponse:
+      type: object
+      required: [version_id, uploaded_at, original_size_bytes, processed_size_bytes, features_count, region_names, warnings, is_active]
+      properties:
+        version_id: { type: string, format: uuid }
+        uploaded_at: { type: string, format: date-time }
+        original_filename: { type: string }
+        original_size_bytes: { type: integer, format: int64 }
+        processed_size_bytes: { type: integer, format: int64 }
+        features_count: { type: integer }
+        region_names:
+          type: array
+          items: { type: string }
+        warnings:
+          type: array
+          items: { $ref: '#/components/schemas/Warning' }
+        is_active: { type: boolean, enum: [false] }
+        notes: { type: string, nullable: true }
+
+    JobAccepted:
+      type: object
+      required: [job_id, status, submitted_at]
+      properties:
+        job_id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, running] }
+        submitted_at: { type: string, format: date-time }
+
+    JobStatus:
+      type: object
+      required: [job_id, status, submitted_at]
+      properties:
+        job_id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, running, done, failed] }
+        submitted_at: { type: string, format: date-time }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+        version_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Present si status == done
+        error_message:
+          type: string
+          nullable: true
+          description: Present si status == failed
+
+    VersionListItem:
+      type: object
+      required: [id, created_at, created_by, original_filename, processed_size_bytes, features_count, is_active, has_warnings]
+      properties:
+        id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        created_by:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            email: { type: string }
+        original_filename: { type: string }
+        original_size_bytes: { type: integer, format: int64 }
+        processed_size_bytes: { type: integer, format: int64 }
+        features_count: { type: integer }
+        is_active: { type: boolean }
+        has_warnings: { type: boolean }
+        notes: { type: string, nullable: true }
+
+    VersionDetail:
+      allOf:
+        - $ref: '#/components/schemas/VersionListItem'
+        - type: object
+          required: [region_names, warnings, geojson_processed]
+          properties:
+            region_names:
+              type: array
+              items: { type: string }
+            warnings:
+              type: array
+              items: { $ref: '#/components/schemas/Warning' }
+            geojson_processed:
+              type: object
+              description: FeatureCollection GeoJSON traite
+
+    Warning:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            - FEATURE_COUNT_OUT_OF_RANGE
+            - REGION_NOT_IN_DATABASE
+            - DUPLICATE_NAME_DROPPED
+            - FEATURE_TOO_SMALL_DROPPED
+            - GEOMETRY_FIXED
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail: { type: string }
+        code: { type: string }

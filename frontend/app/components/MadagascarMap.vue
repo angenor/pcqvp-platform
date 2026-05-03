@@ -20,52 +20,87 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let root: any = null
 let polygonSeries: any = null
 
-// Mapping des IDs amCharts geodata vers les noms de régions en base
-const amchartsToRegionName: Record<string, string> = {
-  'MG-TIT': 'Itasy',
-  'MG-TAG': 'Analamanga',
-  'MG-TVA': 'Vakinankaratra',
-  'MG-TBO': 'Bongolava',
-  'MG-FAM': "Amoron'i Mania",
-  'MG-FHM': 'Haute Matsiatra',
-  'MG-FVF': 'Vatovavy-Fitovinany',
-  'MG-FHO': 'Ihorombe',
-  'MG-FAA': 'Atsimo-Atsinanana',
-  'MG-AAO': 'Alaotra-Mangoro',
-  'MG-AAI': 'Atsinanana',
-  'MG-AAN': 'Analanjirofo',
-  'MG-MSF': 'Sofia',
-  'MG-MBO': 'Boeny',
-  'MG-MBE': 'Betsiboka',
-  'MG-MME': 'Melaky',
-  'MG-UAF': 'Atsimo-Andrefana',
-  'MG-UAD': 'Androy',
-  'MG-UAY': 'Anosy',
-  'MG-UME': 'Menabe',
-  'MG-DDI': 'Diana',
-  'MG-DSF': 'Sava',
+const fetchState = ref<'loading' | 'success' | 'error'>('loading')
+const errorMessage = ref('')
+
+function normalize(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim()
 }
 
-const findRegionByName = (name: string): RegionListItem | undefined => {
-  return props.regions.find(r => r.name.toLowerCase() === name.toLowerCase())
+const regionsByNorm = computed<Map<string, RegionListItem>>(() => {
+  const m = new Map<string, RegionListItem>()
+  for (const r of props.regions) m.set(normalize(r.name), r)
+  return m
+})
+
+function findRegionForFeature(props_: any): RegionListItem | undefined {
+  const name = props_?.name
+  if (!name) return undefined
+  return regionsByNorm.value.get(normalize(String(name)))
 }
 
-const findRegionByAmchartsId = (amchartsId: string): RegionListItem | undefined => {
-  const regionName = amchartsToRegionName[amchartsId]
-  if (!regionName) return undefined
-  return findRegionByName(regionName)
-}
-
-const getRegionColor = (region: RegionListItem | undefined): string => {
+function getRegionColor(region: RegionListItem | undefined): string {
   if (!region) return isDark.value ? '#374151' : '#e5e7eb'
-  // Couleur uniforme pour les régions avec données
   return isDark.value ? '#2563eb' : '#3b82f6'
 }
 
-const initChart = async () => {
-  if (!chartRef.value || !$am5) return
+async function fetchGeoJson(): Promise<any> {
+  try {
+    fetchState.value = 'loading'
+    const data = await $fetch<any>('/api/geography/regions/geojson')
+    fetchState.value = 'success'
+    return data
+  } catch (e: unknown) {
+    fetchState.value = 'error'
+    errorMessage.value = 'Carte temporairement indisponible'
+    throw e
+  }
+}
 
-  const madagascarRegionHigh = await import('@amcharts/amcharts5-geodata/madagascarRegionHigh').then(m => m.default)
+function computeBounds(geojson: any): { north: number; south: number; east: number; west: number } | null {
+  let north = -Infinity, south = Infinity, east = -Infinity, west = Infinity
+  const visit = (c: any) => {
+    if (typeof c[0] === 'number') {
+      const [lon, lat] = c
+      if (lon < west) west = lon
+      if (lon > east) east = lon
+      if (lat < south) south = lat
+      if (lat > north) north = lat
+    } else if (Array.isArray(c)) {
+      for (const x of c) visit(x)
+    }
+  }
+  for (const f of geojson?.features || []) visit(f.geometry?.coordinates || [])
+  if (!isFinite(north)) return null
+  return { north, south, east, west }
+}
+
+function fitChart(chart: any, geojson: any) {
+  const b = computeBounds(geojson)
+  if (!b) return
+  const lat = (b.north + b.south) / 2
+  const lon = (b.east + b.west) / 2
+  const dLat = Math.max(0.5, b.north - b.south)
+  const dLon = Math.max(0.5, b.east - b.west)
+  // Niveau de zoom Mercator approximatif pour caser le bbox dans le viewport,
+  // avec marge 1.4× pour laisser respirer la carte.
+  // Marge 0.85× pour garantir que toute l'emprise (y compris pointe nord/sud) reste visible.
+  const zoom = Math.max(1.2, Math.min(15, Math.min(40 / dLon, 22 / dLat) * 0.85))
+  try { chart.zoomToGeoPoint({ latitude: lat, longitude: lon }, zoom, false) } catch { /* noop */ }
+}
+
+async function initChart() {
+  if (!chartRef.value || !$am5) return
+  let geojson: any
+  try {
+    geojson = await fetchGeoJson()
+  } catch {
+    return
+  }
 
   root = $am5.core.Root.new(chartRef.value)
   root.setThemes([$am5.themes.Animated.new(root)])
@@ -76,18 +111,15 @@ const initChart = async () => {
       panY: 'translateY',
       wheelX: 'none',
       wheelY: 'none',
-      maxZoomLevel: 1,
       projection: $am5.map.geoMercator(),
       homeGeoPoint: { latitude: -18.8792, longitude: 47.5079 },
-      homeZoomLevel: 1,
+      homeZoomLevel: 7,
     })
   )
 
   polygonSeries = chart.series.push(
     $am5.map.MapPolygonSeries.new(root, {
-      geoJSON: madagascarRegionHigh,
-      valueField: 'value',
-      calculateAggregates: true,
+      geoJSON: geojson,
     })
   )
 
@@ -105,71 +137,82 @@ const initChart = async () => {
   })
 
   polygonSeries.mapPolygons.template.events.on('click', (ev: any) => {
-    const dataItem = ev.target.dataItem
-    if (dataItem) {
-      const amchartsId = dataItem.get('id')
-      const region = findRegionByAmchartsId(amchartsId)
-      emit('regionClick', region || null)
-    }
+    const di = ev.target.dataItem
+    if (!di) return
+    const dataContext = di.dataContext as any
+    const region = findRegionForFeature(dataContext)
+    if (!region) return
+    emit('regionClick', region)
   })
 
   polygonSeries.mapPolygons.template.events.on('pointerover', (ev: any) => {
-    const dataItem = ev.target.dataItem
-    if (dataItem) {
-      const amchartsId = dataItem.get('id')
-      const region = findRegionByAmchartsId(amchartsId)
-      emit('regionHover', region || null)
-    }
+    const di = ev.target.dataItem
+    if (!di) return
+    const region = findRegionForFeature(di.dataContext as any)
+    emit('regionHover', region || null)
   })
 
   polygonSeries.mapPolygons.template.events.on('pointerout', () => {
     emit('regionHover', null)
   })
 
-  polygonSeries.mapPolygons.template.adapters.add('tooltipText', (_text: string, target: any) => {
-    const dataItem = target.dataItem
-    if (dataItem) {
-      const amchartsId = dataItem.get('id')
-      const region = findRegionByAmchartsId(amchartsId)
-      if (region) {
-        return `[bold]${region.name}[/]`
-      }
+  polygonSeries.mapPolygons.template.adapters.add(
+    'tooltipText',
+    (_text: string, target: any) => {
+      const di = target.dataItem
+      if (!di) return '{name}'
+      const ctx = di.dataContext as any
+      const region = findRegionForFeature(ctx)
+      if (region) return `[bold]${region.name}[/]`
+      const fallback = ctx?.name ? `${ctx.name} — Données non disponibles` : 'Données non disponibles'
+      return fallback
     }
-    return '{name}'
-  })
+  )
+
+  polygonSeries.mapPolygons.template.adapters.add(
+    'cursorOverStyle',
+    (_v: any, target: any) => {
+      const di = target.dataItem
+      if (!di) return 'pointer'
+      return findRegionForFeature(di.dataContext as any) ? 'pointer' : 'default'
+    }
+  )
 
   polygonSeries.events.on('datavalidated', () => {
     applyColors()
+    requestAnimationFrame(() => fitChart(chart, geojson))
   })
+
+  // Filet de sécurité : si `datavalidated` n'a pas encore positionné la carte
+  // après 500 ms (cas observé avec certains GeoJSON), on force le recadrage.
+  setTimeout(() => {
+    if (chart.get('zoomLevel') == null || (chart.get('zoomLevel') as number) < 1.4) {
+      fitChart(chart, geojson)
+    }
+  }, 500)
 }
 
-const applyColors = () => {
+function applyColors() {
   if (!polygonSeries || !$am5) return
   polygonSeries.mapPolygons.each((polygon: any) => {
-    const dataItem = polygon.dataItem
-    if (dataItem) {
-      const amchartsId = dataItem.get('id')
-      const region = findRegionByAmchartsId(amchartsId)
-      const color = getRegionColor(region)
-      polygon.set('fill', $am5.core.color(color))
-    }
+    const di = polygon.dataItem
+    if (!di) return
+    const region = findRegionForFeature(di.dataContext as any)
+    polygon.set('fill', $am5.core.color(getRegionColor(region)))
   })
 }
 
-watch(() => props.regions, () => {
-  nextTick(() => applyColors())
-}, { deep: true })
+watch(() => props.regions, () => nextTick(() => applyColors()), { deep: true })
 
 watch(isDark, () => {
-  if (polygonSeries) {
-    polygonSeries.mapPolygons.template.setAll({
-      stroke: $am5.core.color(isDark.value ? '#1f2937' : '#ffffff'),
-    })
-    polygonSeries.mapPolygons.template.states.create('hover', {
-      fill: $am5.core.color(isDark.value ? '#4f46e5' : '#818cf8'),
-    })
-    applyColors()
-  }
+  if (!polygonSeries) return
+  polygonSeries.mapPolygons.template.setAll({
+    stroke: $am5.core.color(isDark.value ? '#1f2937' : '#ffffff'),
+  })
+  polygonSeries.mapPolygons.template.states.create('hover', {
+    fill: $am5.core.color(isDark.value ? '#4f46e5' : '#818cf8'),
+  })
+  applyColors()
 })
 
 onMounted(() => initChart())
@@ -178,9 +221,8 @@ onUnmounted(() => { if (root) root.dispose() })
 
 <template>
   <div class="relative w-full h-full min-h-100">
-    <!-- Loading overlay -->
     <div
-      v-if="isLoading"
+      v-if="isLoading || fetchState === 'loading'"
       class="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-10 rounded-xl"
     >
       <div class="flex flex-col items-center gap-3">
@@ -189,10 +231,17 @@ onUnmounted(() => { if (root) root.dispose() })
       </div>
     </div>
 
-    <!-- Chart container -->
+    <div
+      v-if="fetchState === 'error'"
+      class="absolute inset-0 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-900"
+    >
+      <div class="text-center">
+        <p class="text-sm text-gray-600 dark:text-gray-400">{{ errorMessage }}</p>
+      </div>
+    </div>
+
     <div ref="chartRef" class="w-full h-full min-h-100 rounded-xl" />
 
-    <!-- Légende repliable -->
     <div class="absolute bottom-4 left-4 z-20">
       <button
         v-if="!legendOpen"
