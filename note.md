@@ -2,6 +2,8 @@
 
 `agent-browser --headed`
 
+`claude --dangerously-skip-permissions`
+
 voici ce que je veux pour le backoffice:
 # sur la page des provinces Admin: 
 afficher la liste des province en grille
