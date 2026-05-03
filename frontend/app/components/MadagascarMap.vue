@@ -47,11 +47,7 @@ const amchartsToRegionName: Record<string, string> = {
 }
 
 const findRegionByName = (name: string): RegionListItem | undefined => {
-  return props.regions.find(r =>
-    r.name.toLowerCase() === name.toLowerCase() ||
-    r.name.toLowerCase().includes(name.toLowerCase()) ||
-    name.toLowerCase().includes(r.name.toLowerCase())
-  )
+  return props.regions.find(r => r.name.toLowerCase() === name.toLowerCase())
 }
 
 const findRegionByAmchartsId = (amchartsId: string): RegionListItem | undefined => {
