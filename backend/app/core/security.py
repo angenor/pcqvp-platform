@@ -92,3 +92,13 @@ def require_role(*roles: str):
         return current_user
 
     return role_checker
+
+
+async def get_current_admin_user(current_user=Depends(get_current_user)):
+    """Dependance reutilisable : exige role == 'admin' (rejette editor)."""
+    if current_user.role.value != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acces reserve aux administrateurs",
+        )
+    return current_user

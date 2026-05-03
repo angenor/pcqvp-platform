@@ -16,6 +16,7 @@ from app.models.compte_administratif import (
     RecetteLine,
 )
 from app.models.editorial import ContactInfo, EditorialContent, ResourceLink
+from app.models.geodata_version import GeodataVersion
 from app.models.geography import Commune, Province, Region
 from app.models.newsletter import NewsletterSubscriber, SubscriberStatus
 from app.models.site_config import SiteConfiguration
@@ -28,6 +29,7 @@ __all__ = [
     "EditorialContent",
     "ContactInfo",
     "ResourceLink",
+    "GeodataVersion",
     "User",
     "Province",
     "Region",

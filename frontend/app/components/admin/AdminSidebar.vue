@@ -34,6 +34,7 @@ const menuGroups: MenuGroup[] = [
       { label: 'Provinces', to: '/admin/geography/provinces', icon: ['fas', 'map'] },
       { label: 'Regions', to: '/admin/geography/regions', icon: ['fas', 'map-marked'] },
       { label: 'Communes', to: '/admin/geography/communes', icon: ['fas', 'city'] },
+      { label: 'Géodonnées (régions)', to: '/admin/geodata/regions', icon: ['fas', 'globe'] },
     ],
   },
   {

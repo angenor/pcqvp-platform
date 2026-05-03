@@ -44,6 +44,22 @@ class Settings(BaseSettings):
         "image/gif",
     ]
 
+    GEODATA_MAX_UPLOAD_BYTES: int = 50 * 1024 * 1024
+    GEODATA_MAX_VERSIONS: int = 50
+    # Seuil Visvalingam-Whyatt en deg² : 0.0005 ≈ 6×6 km², simplifie sans détruire les frontières.
+    GEODATA_SIMPLIFY_RATIO: float = 0.0005
+    GEODATA_MIN_FEATURE_AREA_DEG2: float = 0.0001
+    GEODATA_FEATURES_MIN_WARN: int = 20
+    GEODATA_FEATURES_MAX_WARN: int = 30
+    GEODATA_SYNC_TIMEOUT_SECONDS: float = 5.0
+    GEODATA_RATE_LIMIT_UPLOADS_PER_HOUR: int = 10
+    GEODATA_NAME_ALIASES: dict[str, str] = {
+        "matsiatra ambony": "Haute Matsiatra",
+    }
+    GEODATA_COORDINATE_PRECISION: int = 4
+    GEODATA_PUBLIC_CACHE_MAX_AGE: int = 3600
+    GEODATA_REGION_CODE_PREFIX: str = "MG-"
+
     model_config = SettingsConfigDict(
         env_file=_find_env_file(),
         env_file_encoding="utf-8",

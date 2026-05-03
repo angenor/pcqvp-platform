@@ -1,0 +1,140 @@
+openapi: 3.1.0
+info:
+  title: PCQVP — Public Geography GeoJSON API
+  version: 0.1.0
+  description: |
+    Endpoint public (sans authentification) servant le GeoJSON regional Madagascar
+    de la version active courante. Cacheable via ETag + max-age.
+
+servers:
+  - url: http://localhost:8000
+    description: Dev local
+
+tags:
+  - name: public-geography
+    description: Endpoints publics geographie
+
+paths:
+  /api/geography/regions/geojson:
+    get:
+      tags: [public-geography]
+      summary: GeoJSON de la version active des regions
+      description: |
+        Retourne la `FeatureCollection` traitee de la version `is_active=true`.
+        Utilise ETag faible base sur l'UUID de la version courante.
+        Le client peut envoyer `If-None-Match` pour obtenir un 304.
+      operationId: getRegionsGeojson
+      parameters:
+        - in: header
+          name: If-None-Match
+          required: false
+          schema: { type: string }
+          example: 'W/"1f0c1a0e-7b16-4f2c-9c5e-3c2c8e2a8b91"'
+      responses:
+        '200':
+          description: GeoJSON de la version active
+          headers:
+            ETag:
+              schema: { type: string }
+              description: ETag faible base sur l'UUID de la version
+              example: 'W/"1f0c1a0e-7b16-4f2c-9c5e-3c2c8e2a8b91"'
+            Cache-Control:
+              schema: { type: string }
+              example: 'public, max-age=3600'
+            Content-Type:
+              schema: { type: string }
+              example: application/geo+json
+          content:
+            application/geo+json:
+              schema: { $ref: '#/components/schemas/RegionFeatureCollection' }
+            application/json:
+              schema: { $ref: '#/components/schemas/RegionFeatureCollection' }
+        '304':
+          description: |
+            Le client possede deja la version courante (If-None-Match correspond
+            a l'ETag courant). Aucun corps.
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string }
+        '503':
+          description: Aucune version active disponible (incident)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail: { type: string }
+
+components:
+  schemas:
+    RegionFeatureCollection:
+      type: object
+      required: [type, features]
+      properties:
+        type: { type: string, enum: [FeatureCollection] }
+        features:
+          type: array
+          items: { $ref: '#/components/schemas/RegionFeature' }
+
+    RegionFeature:
+      type: object
+      required: [type, properties, geometry]
+      properties:
+        type: { type: string, enum: [Feature] }
+        properties:
+          type: object
+          required: [name, region_code, admin_level]
+          additionalProperties: false
+          properties:
+            name:
+              type: string
+              description: Nom canonique de la region
+              example: Haute Matsiatra
+            name_official:
+              type: string
+              description: Nom officiel optionnel
+            region_code:
+              type: string
+              description: 'Code stable: prefixe MG- + slug ASCII NFD'
+              example: MG-haute-matsiatra
+            admin_level:
+              type: string
+              enum: ['4']
+        geometry:
+          oneOf:
+            - $ref: '#/components/schemas/Polygon'
+            - $ref: '#/components/schemas/MultiPolygon'
+
+    Polygon:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, enum: [Polygon] }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              minItems: 2
+              maxItems: 3
+              items: { type: number }
+
+    MultiPolygon:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, enum: [MultiPolygon] }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                type: array
+                minItems: 2
+                maxItems: 3
+                items: { type: number }
